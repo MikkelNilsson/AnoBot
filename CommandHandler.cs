@@ -2,6 +2,8 @@
 using Discord.WebSocket;
 using Discord;
 using System;
+using System.IO;
+using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -34,7 +36,7 @@ namespace SimpBot
             var argPos = 0;
             if (msg.Author.IsBot) return;
 
-            Console.WriteLine(msg.Author.ToString().Substring(0, msg.Author.ToString().Length - 5) + ": " + msg.Content);
+            // Console.WriteLine(msg.Author.ToString().Substring(0, msg.Author.ToString().Length - 5) + ": " + msg.Content);
 
             SocketUserMessage userMsg = msg as SocketUserMessage;
             if (userMsg is null) return;
@@ -56,7 +58,7 @@ namespace SimpBot
 
         private Task LogAsync(LogMessage logMessage)
         {
-            Console.WriteLine(logMessage.Message);
+            Console.WriteLine(DateTime.UtcNow.ToString("[MM/dd/yyyy HH:mm:ss] ") + logMessage.Message);
             return Task.CompletedTask;
         }
     }

@@ -1,20 +1,21 @@
 ﻿{
   "version": "1.0.0",
   "restore": {
-    "projectUniqueName": "C:\\.Projekter\\SimpBot\\SimpBot.csproj",
+    "projectUniqueName": "D:\\.Projekter\\AnoBot\\SimpBot.csproj",
     "projectName": "SimpBot",
-    "projectPath": "C:\\.Projekter\\SimpBot\\SimpBot.csproj",
-    "outputPath": "C:\\.Projekter\\SimpBot\\obj\\",
+    "projectPath": "D:\\.Projekter\\AnoBot\\SimpBot.csproj",
+    "outputPath": "D:\\.Projekter\\AnoBot\\obj\\",
     "projectStyle": "PackageReference",
     "fallbackFolders": [
-      "C:\\Microsoft\\Xamarin\\NuGet"
+      "C:\\Microsoft\\Xamarin\\NuGet",
+      "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
     ],
     "originalTargetFrameworks": [
       "netcoreapp3.1"
     ],
     "sources": {
       "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-      "http://packagesource": {},
+      "https://api.nuget.org/v3/index.json": {},
       "https://www.myget.org/F/discord-net/api/v3/index.json": {}
     },
     "frameworks": {

@@ -16,6 +16,7 @@ namespace SimpBot.Custom_Classes
 
         public static (ulong guildId, ServerData data) Deserialize(string serializeString)
         {
+            //TODO FIX THIS TRASH BS!
             serializeString.TrimStart('\\').TrimStart('n');
             string[] sarr = serializeString.Split("\n").Where(x => x != "").ToArray();
             string[] gid = sarr[0].Split("-");

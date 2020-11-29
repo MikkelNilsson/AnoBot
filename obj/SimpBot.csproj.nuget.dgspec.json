@@ -1,20 +1,21 @@
 {
   "format": 1,
   "restore": {
-    "C:\\.Projekter\\SimpBot\\SimpBot.csproj": {}
+    "D:\\.Projekter\\AnoBot\\SimpBot.csproj": {}
   },
   "projects": {
-    "C:\\.Projekter\\SimpBot\\SimpBot.csproj": {
+    "D:\\.Projekter\\AnoBot\\SimpBot.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\.Projekter\\SimpBot\\SimpBot.csproj",
+        "projectUniqueName": "D:\\.Projekter\\AnoBot\\SimpBot.csproj",
         "projectName": "SimpBot",
-        "projectPath": "C:\\.Projekter\\SimpBot\\SimpBot.csproj",
+        "projectPath": "D:\\.Projekter\\AnoBot\\SimpBot.csproj",
         "packagesPath": "C:\\Users\\mikke\\.nuget\\packages\\",
-        "outputPath": "C:\\.Projekter\\SimpBot\\obj\\",
+        "outputPath": "D:\\.Projekter\\AnoBot\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Microsoft\\Xamarin\\NuGet"
+          "C:\\Microsoft\\Xamarin\\NuGet",
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
         ],
         "configFilePaths": [
           "C:\\Users\\mikke\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -26,7 +27,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "http://packagesource": {},
+          "https://api.nuget.org/v3/index.json": {},
           "https://www.myget.org/F/discord-net/api/v3/index.json": {}
         },
         "frameworks": {
