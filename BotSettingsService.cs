@@ -31,6 +31,7 @@ namespace SimpBot
         {
             if (!File.Exists(path))
             {
+                Util.Log(new LogMessage(LogSeverity.Warning, "", "Directory not found! Creating new directory.."));
                 string directoryPath = path.Substring(0, path.Length - 12);
                 Console.WriteLine("PATH2: " + directoryPath);
                 if (!Directory.Exists(directoryPath))

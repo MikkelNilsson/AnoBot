@@ -27,7 +27,7 @@ namespace SimpBot
         public async Task InitializeAsync()
         {
             await _cmdService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-            _cmdService.Log += LogAsync;
+            _cmdService.Log += Util.Log;
             _client.MessageReceived += HandleMessage;
         }
 
@@ -54,12 +54,6 @@ namespace SimpBot
             }
             IUserMessage demsg = context.Message;
             var result = await _cmdService.ExecuteAsync(context, argPos, _services);
-        }
-
-        private Task LogAsync(LogMessage logMessage)
-        {
-            Console.WriteLine(DateTime.UtcNow.ToString("[MM/dd/yyyy HH:mm:ss] ") + logMessage.Message);
-            return Task.CompletedTask;
         }
     }
 }
