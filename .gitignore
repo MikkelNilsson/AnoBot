@@ -405,9 +405,4 @@ Desktop.ini
 **/.idea/
 **/.vs
 **/secret/
-obj/SimpBot.csproj.nuget.dgspec.json
-obj/rider.project.restore.info
-obj/project.packagespec.json
-obj/project.nuget.cache
-obj/project.assets.json
-obj/Debug/netcoreapp3.1/SimpBot.csprojAssemblyReference.cache
+obj/
