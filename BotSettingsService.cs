@@ -22,14 +22,15 @@ namespace SimpBot
             string divider = "";
             if (Environment.CurrentDirectory.Contains('/')) divider = "/";
             else divider = "\\";
-            path = Environment.CurrentDirectory + divider + "Data" + divider + "BotData.txt";
+            path = Environment.CurrentDirectory + divider + "Data" + divider;
             Console.WriteLine("PATH: " + path);
             LoadData();
         }
 
         public void LoadData()
         {
-            if (!File.Exists(path))
+            
+            if (!Directory.Exists(path))
             {
                 Util.Log(new LogMessage(LogSeverity.Warning, "", "Directory not found! Creating new directory.."));
                 string directoryPath = path.Substring(0, path.Length - 12);
@@ -54,14 +55,17 @@ namespace SimpBot
             }
         }
 
-        public void SaveData()
+        public void SaveAllData()
         {
-            string saveString = "";
             foreach (ulong guildId in botData.Keys)
             {
-                saveString += botData[guildId].Serialize(guildId);
+               SaveServerData(guildId);
             }
-                File.WriteAllText(path, saveString);
+        }
+
+        public void SaveServerData(ulong guildId)
+        {
+            File.WriteAllText(path + guildId + ".txt", botData[guildId].Serialize(guildId));
         }
 
         private ServerData GetServerData(IGuild guild)
@@ -69,7 +73,7 @@ namespace SimpBot
             if (!botData.ContainsKey(guild.Id))
             {
                 botData.Add(guild.Id, new ServerData());
-                SaveData();
+                SaveAllData();
                 return botData[guild.Id];
             }
             else
@@ -81,7 +85,7 @@ namespace SimpBot
         public string SetPrefix(IGuild guild, string prefix)
         {
             GetServerData(guild).SetPrefix(prefix);
-            SaveData();
+            SaveAllData();
             return $"Prefix set to {prefix}";
         }
 
@@ -139,7 +143,7 @@ namespace SimpBot
                 return $"Role not found {command}";
 
             GetServerData(guild).SetDefaultRole(dRole.Id);
-            SaveData();
+            SaveAllData();
             return $"Default role set to {dRole.Name}";
         }
 
