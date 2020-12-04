@@ -1,6 +1,10 @@
 {
   "version": 2,
+<<<<<<< Updated upstream
   "dgSpecHash": "M6clbQNr3BXUNuhVj8d4MLVMZZNiPjIrpvpLScV4oGVHQg0oCFiPe3YZ6pAX5K8+T5W/lmG4xP5SjRTo8fUQPQ==",
+=======
+  "dgSpecHash": "mj+2rqIkll4SGyCRyyDeW1FnT9vtLdTHL1lDh6pruhqco1dbrykqPeQ+FBJ4Lao7tLj0megu5TDHPi7Xzmh6eA==",
+>>>>>>> Stashed changes
   "success": true,
   "projectFilePath": "D:\\.Projekter\\AnoBot\\SimpBot.csproj",
   "expectedPackageFiles": [
