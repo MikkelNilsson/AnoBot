@@ -17,50 +17,44 @@ namespace SimpBot
 
         private string path;
 
+        private string divider = "";
+        
         public BotSettingsService()
         {
-            string divider = "";
             if (Environment.CurrentDirectory.Contains('/')) divider = "/";
             else divider = "\\";
-            path = Environment.CurrentDirectory + divider + "Data" + divider + "BotData.txt";
-            Console.WriteLine("PATH: " + path);
+            path = Environment.CurrentDirectory + divider + "Data";
+            Util.Log("PATH: " + path);
             LoadData();
         }
-
+        //                                                                         --- Handling Server Data ------------
         public void LoadData()
         {
-            if (!File.Exists(path))
+            
+            if (!Directory.Exists(path))
             {
-                string directoryPath = path.Substring(0, path.Length - 12);
-                Console.WriteLine("PATH2: " + directoryPath);
-                if (!Directory.Exists(directoryPath))
-                    Directory.CreateDirectory(directoryPath);
-                File.Create(path);
+                Util.Log("Directory not found! Creating new directory..");
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
                 botData = new Dictionary<ulong, ServerData>();
             }
             else
             {
                 if (botData is null) botData = new Dictionary<ulong, ServerData>();
 
-                string[] RawDataStrings = File.ReadAllText(path).Split("\n|-|-|end").Where(x => x.Length > 5).ToArray();
-
-                foreach (string s in RawDataStrings)
+                String[] files = Directory.GetFiles(path);
+                foreach (string filePath in files)
                 {
-                    var deserializedData = ServerData.Deserialize(s);
-
-                    botData.Add(deserializedData.guildId, deserializedData.data);
+                    string[] pathArray = filePath.Split(divider);
+                    botData.Add(ulong.Parse(pathArray[^1].Substring(0, pathArray[^1].Length - 4)), 
+                        ServerData.Deserialize(File.ReadAllText(filePath)));
                 }
             }
         }
 
-        public void SaveData()
+        public void SaveServerData(ulong guildId)
         {
-            string saveString = "";
-            foreach (ulong guildId in botData.Keys)
-            {
-                saveString += botData[guildId].Serialize(guildId);
-            }
-                File.WriteAllText(path, saveString);
+            File.WriteAllText(path + divider + guildId + ".txt", botData[guildId].Serialize(guildId));
         }
 
         private ServerData GetServerData(IGuild guild)
@@ -68,27 +62,26 @@ namespace SimpBot
             if (!botData.ContainsKey(guild.Id))
             {
                 botData.Add(guild.Id, new ServerData());
-                SaveData();
+                SaveServerData(guild.Id);
                 return botData[guild.Id];
             }
-            else
-            {
-                return botData[guild.Id];
-            }
+            return botData[guild.Id];
         }
 
+        //                                                                         --- Prefix --------------------------
         public string SetPrefix(IGuild guild, string prefix)
         {
             GetServerData(guild).SetPrefix(prefix);
-            SaveData();
+            SaveServerData(guild.Id);
             return $"Prefix set to {prefix}";
         }
-
+        
         public string GetPrefix(IGuild guild)
         {
             return GetServerData(guild).GetPrefix();
         }
-
+        
+        //                                                                         --- Help ----------------------------
         public async Task HelpAsync(SocketCommandContext context)
         {
             await context.Message.DeleteAsync();
@@ -104,21 +97,22 @@ namespace SimpBot
                 $"\n> **Pause**: Use to pause/unpause the current song." +
                 $"\n> **Resume**: Use to unpause the current song." +
                 $"\n> **Stop**: Use to stop the music." +
-                $"\n> **leave**: Use to make the bot leave the voice channel." +*/
-                $"\n> " +
+                $"\n> **leave**: Use to make the bot leave the voice channel." +
+                $"\n> " +*/
                 $"\n> ***__Bot Settings:__***" +
                 $"\n> **SetPrefix <prefix>**: Use to set prefix for commands." +
                 $"\n> **SetDefaultRole <@role>**: Use to set default role. Role will be added to every user joining the server from that point on. *(Does not affect current members)*" +
                 $"\n> **RemoveDefaultRole**: Use to remove the default role function.");
         }
 
+        //                                                                         --- Default Role --------------------
         public IRole GetDefaultRole(IGuild guild)
         {
-            if (GetServerData(guild).hasDefaultRole())
+            if (GetServerData(guild).HasDefaultRole())
                 return guild.GetRole(GetServerData(guild).GetDefaultRole());
             else return guild.EveryoneRole;
         }
-
+        
         public string SetDefaultRole(IGuild guild, string command)
         {
             Console.WriteLine(command);
@@ -138,16 +132,17 @@ namespace SimpBot
                 return $"Role not found {command}";
 
             GetServerData(guild).SetDefaultRole(dRole.Id);
-            SaveData();
+            SaveServerData(guild.Id);
             return $"Default role set to {dRole.Name}";
         }
 
         public string RemoveDefaultRole(SocketGuild guild)
         {
-            if (!GetServerData(guild).hasDefaultRole())
+            if (!GetServerData(guild).HasDefaultRole())
                 return "No default role has been set.";
 
             GetServerData(guild).RemoveDefaultRole();
+            SaveServerData(guild.Id);
             return "Removed default role.";
         }
     }

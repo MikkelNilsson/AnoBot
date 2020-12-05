@@ -1,8 +1,0 @@
-newGuild-737010607139848262
-prefix: !
-defaultRole: 0
-|-|-|end
-newGuild-534100287179194368
-prefix: !
-defaultRole: 686695843201679428
-|-|-|end

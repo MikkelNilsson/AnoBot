@@ -404,3 +404,5 @@ Desktop.ini
 
 **/.idea/
 **/.vs
+**/secret/
+obj/
