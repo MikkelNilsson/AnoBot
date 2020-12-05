@@ -14,7 +14,7 @@ namespace SimpBot.Custom_Classes
             defaultRole = 0;
         }
 
-        public static (ulong guildId, ServerData data) Deserialize(string serializeString)
+        public static (ulong guildId, ServerData data) OldDeserialize(string serializeString)
         {
             //TODO FIX THIS TRASH BS!
             serializeString.TrimStart('\\').TrimStart('n');
@@ -25,6 +25,25 @@ namespace SimpBot.Custom_Classes
             tmp.SetPrefix(sarr[1].Substring(8));
             tmp.SetDefaultRole(ulong.Parse(sarr[2].Substring(13)));
             return (GuildId, tmp);
+        }
+        public static ServerData Deserialize(string serializeString)
+        {
+            ServerData res = new ServerData();
+            foreach (string s in serializeString.Split("\n"))
+            {
+                string[] sarr = s.Split(": ", 2);
+                switch (sarr[0])
+                {
+                    case("prefix"):
+                        res.prefix = sarr[1];
+                        break;
+                    case("defaultRole"):
+                        res.defaultRole = ulong.Parse(sarr[1]);
+                        break;
+                }
+            }
+
+            return res;
         }
 
         public void SetPrefix(string newPrefix)
@@ -37,9 +56,9 @@ namespace SimpBot.Custom_Classes
             return prefix;
         }
 
-        public bool hasDefaultRole()
+        public bool HasDefaultRole()
         {
-            return !(defaultRole == 0);
+            return defaultRole != 0;
         }
 
         public ulong GetDefaultRole()
@@ -59,10 +78,8 @@ namespace SimpBot.Custom_Classes
 
         public string Serialize(ulong guildId)
         {
-            return "newGuild-" + guildId + "\n" + 
-                "prefix: " + prefix + "\n" + 
-                "defaultRole: " + defaultRole + "\n" + 
-                "|-|-|end\n";
+            return "prefix: " + prefix + "\n" +
+                   "defaultRole: " + defaultRole;
         }
     }
 }

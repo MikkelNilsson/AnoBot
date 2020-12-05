@@ -40,7 +40,7 @@ namespace SimpBot
                 token = System.IO.File.ReadAllText(Environment.CurrentDirectory + "/secret/botToken.txt");
             } catch
             {
-                Console.WriteLine("Could not load token from file, trying env variables.");
+                Util.Log("Could not load token from file, trying env variables.");
                 token = System.Environment.GetEnvironmentVariable("botToken");
             }
             await _client.LoginAsync(TokenType.Bot, token);
