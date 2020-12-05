@@ -36,7 +36,7 @@ namespace SimpBot
             var argPos = 0;
             if (msg.Author.IsBot) return;
 
-            // Console.WriteLine(msg.Author.ToString().Substring(0, msg.Author.ToString().Length - 5) + ": " + msg.Content);
+            // Util.Log(msg.Author.ToString().Substring(0, msg.Author.ToString().Length - 5) + ": " + msg.Content);
 
             SocketUserMessage userMsg = msg as SocketUserMessage;
             if (userMsg is null) return;

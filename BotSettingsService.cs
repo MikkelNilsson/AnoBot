@@ -86,23 +86,18 @@ namespace SimpBot
         {
             await context.Message.DeleteAsync();
             var dmChannel = context.User.GetOrCreateDMChannelAsync().Result;
+            IGuildUser gUser = context.User as IGuildUser;
             await dmChannel.SendMessageAsync($"" +
-                $"> __**Help:**__" +
-                $"\n> " +
-                $"\n> To use commands on **{context.Guild.Name}**, use \'**{GetPrefix(context.Guild)}**\' in front of one of the following commands:" +
-                $"\n> " +
-                /*$"\n> ***__Music:__***" +
-                $"\n> **Play <song name or link>**: Use to play music in a voice channel. To use this, you must be in a voice channel." +
-                $"\n> **Skip**: Use to skip the current song." +
-                $"\n> **Pause**: Use to pause/unpause the current song." +
-                $"\n> **Resume**: Use to unpause the current song." +
-                $"\n> **Stop**: Use to stop the music." +
-                $"\n> **leave**: Use to make the bot leave the voice channel." +
-                $"\n> " +*/
-                $"\n> ***__Bot Settings:__***" +
-                $"\n> **SetPrefix <prefix>**: Use to set prefix for commands." +
-                $"\n> **SetDefaultRole <@role>**: Use to set default role. Role will be added to every user joining the server from that point on. *(Does not affect current members)*" +
-                $"\n> **RemoveDefaultRole**: Use to remove the default role function.");
+                                             $"> __**Help:**__" +
+                                             $"\n> " +
+                                             $"\n> To use commands on **{context.Guild.Name}**, use \'**{GetPrefix(context.Guild)}**\' in front of one of the following commands:" +
+                                             $"\n> " +
+                                             (gUser.GuildPermissions.Has(GuildPermission.Administrator) ? 
+                                                 $"\n> ***__Bot Settings:__***" +
+                                                 $"\n> **SetPrefix <prefix>** or use **SP <prefix>**: Use to set prefix for commands."  +
+                                                 $"\n> **SetDefaultRole <@role>** or use **SDR <prefix>**: Use to set default role. Role will be added to every user joining the server from that point on. *(Does not affect current members)*" +
+                                                 $"\n> **RemoveDefaultRole** or use **RDR <prefix>**: Use to remove the default role function." 
+                                                 : ""));
         }
 
         //                                                                         --- Default Role --------------------
@@ -115,7 +110,6 @@ namespace SimpBot
         
         public string SetDefaultRole(IGuild guild, string command)
         {
-            Console.WriteLine(command);
             if (!command.StartsWith("<@&"))
                 return $"{command} is not a valid role!";
             command = command.Substring(3, command.Length - 4);
