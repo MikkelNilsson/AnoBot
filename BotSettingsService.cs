@@ -43,38 +43,12 @@ namespace SimpBot
                 if (botData is null) botData = new Dictionary<ulong, ServerData>();
 
                 String[] files = Directory.GetFiles(path);
-                if (files.Length == 1 && files[0].Equals(path + divider + "BotData.txt"))
+                foreach (string filePath in files)
                 {
-                    string[] RawDataStrings = File.ReadAllText(path + divider + "BotData.txt").Split("\n|-|-|end")
-                        .Where(x => x.Length > 5).ToArray();
-
-                    foreach (string s in RawDataStrings)
-                    {
-                        var deserializedData = ServerData.OldDeserialize(s);
-
-                        botData.Add(deserializedData.guildId, deserializedData.data);
-                    }
-                    SaveAllData();
+                    string[] pathArray = filePath.Split(divider);
+                    botData.Add(ulong.Parse(pathArray[^1].Substring(0, pathArray[^1].Length - 4)), 
+                        ServerData.Deserialize(File.ReadAllText(filePath)));
                 }
-                else
-                {
-                    foreach (string filePath in files)
-                    {
-                        if (filePath.EndsWith("BotData.txt")) continue;
-                        string[] pathArray = filePath.Split(divider);
-                        Util.Log(pathArray[^1].Substring(0, pathArray[^1].Length - 4));
-                        botData.Add(ulong.Parse(pathArray[^1].Substring(0, pathArray[^1].Length - 4)), 
-                            ServerData.Deserialize(File.ReadAllText(filePath)));
-                    }
-                }
-            }
-        }
-
-        public void SaveAllData()
-        {
-            foreach (ulong guildId in botData.Keys)
-            {
-               SaveServerData(guildId);
             }
         }
 
