@@ -22,7 +22,7 @@ namespace SimpBot
         
         public string GetPrefix(IGuild guild)
         {
-            return GetServerData(guild).GetPrefix();
+            return _dataService.GetServerData(guild.Id).GetPrefix();
         }
         
         //--- Help ---
@@ -52,8 +52,8 @@ namespace SimpBot
         //--- Default Role ---
         public IRole GetDefaultRole(IGuild guild)
         {
-            if (GetServerData(guild).HasDefaultRole())
-                return guild.GetRole(GetServerData(guild).GetDefaultRole());
+            if (_dataService.GetServerData(guild.Id).HasDefaultRole())
+                return guild.GetRole(_dataService.GetServerData(guild.Id).GetDefaultRole());
             else return guild.EveryoneRole;
         }
         
@@ -74,18 +74,18 @@ namespace SimpBot
             if (dRole is null)
                 return $"Role not found {command}";
 
-            GetServerData(guild).SetDefaultRole(dRole.Id);
-            SaveServerData(guild.Id);
+            _dataService.GetServerData(guild.Id).SetDefaultRole(dRole.Id);
+            _dataService.SaveServerData(guild.Id);
             return $"Default role set to {dRole.Name}";
         }
 
         public string RemoveDefaultRole(SocketGuild guild)
         {
-            if (!GetServerData(guild).HasDefaultRole())
+            if (!_dataService.GetServerData(guild.Id).HasDefaultRole())
                 return "No default role has been set.";
 
-            GetServerData(guild).RemoveDefaultRole();
-            SaveServerData(guild.Id);
+            _dataService.GetServerData(guild.Id).RemoveDefaultRole();
+            _dataService.SaveServerData(guild.Id);
             return "Removed default role.";
         }
 
