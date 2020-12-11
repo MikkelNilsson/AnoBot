@@ -22,7 +22,7 @@ namespace SimpBot.Modules
             await ReplyAsync($"Prefix set to \'{remainder.Trim()}\'!");
         }
 
-        [Command("Help")]
+        [Command("Help", true)]
         [Alias("H")]
         [RequireBotPermission(Discord.GuildPermission.ManageMessages)]
         public async Task Help()
@@ -41,7 +41,7 @@ namespace SimpBot.Modules
             await Context.Message.DeleteAsync();
         }
 
-        [Command("RemoveDefaultRole")]
+        [Command("RemoveDefaultRole", true)]
         [Alias("RDR")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task RemoveDefaultRole()

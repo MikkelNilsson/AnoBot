@@ -13,9 +13,13 @@ namespace SimpBot
         private DiscordSocketClient _client;
         private CommandService _cmdService;
         private IServiceProvider _services;
+        private DataService _dataService;
         private BotSettingsService _settingsService;
+        private WelcomeMessageService _wmService;
 
-        public SimpBot(DiscordSocketClient client = null, CommandService cmdService = null, BotSettingsService settingsService = null)
+        public SimpBot(DiscordSocketClient client = null, CommandService cmdService = null,
+            BotSettingsService settingsService = null, WelcomeMessageService wmService = null,
+            DataService dataService = null)
         {
             _client = client ?? new DiscordSocketClient(new DiscordSocketConfig
             {
@@ -29,7 +33,9 @@ namespace SimpBot
                 CaseSensitiveCommands = false,
                 DefaultRunMode = RunMode.Async
             });
+            _dataService = dataService ?? new DataService();
             _settingsService = settingsService ?? new BotSettingsService();
+            _wmService = wmService ?? new WelcomeMessageService();
         }
 
         public async Task InitalizeAsync()
@@ -65,12 +71,18 @@ namespace SimpBot
             => new ServiceCollection()
             .AddSingleton(_client)
             .AddSingleton(_cmdService)
+            .AddSingleton(_dataService)
             .AddSingleton(_settingsService)
+            .AddSingleton(_wmService)
             .BuildServiceProvider();
 
 
         private async Task UserJoined(SocketGuildUser usr)
         {
+            if (_wmService.IsWelcomeMessageActive(usr.Guild))
+            {
+                var welcomeMessage = _wmService.GetWelcomeMessage(usr.Guild);
+            }
             try
             {
                 await usr.AddRoleAsync(_settingsService.GetDefaultRole(usr.Guild));

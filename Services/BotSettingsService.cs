@@ -2,77 +2,21 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using System.Linq;
 
 namespace SimpBot
 {
     public class BotSettingsService
     {
-        private Dictionary<ulong, ServerData> botData;
+        private DataService _dataService;
 
-        private string path;
-
-        private string divider = "";
-        
-        public BotSettingsService()
-        {
-            if (Environment.CurrentDirectory.Contains('/')) divider = "/";
-            else divider = "\\";
-            path = Environment.CurrentDirectory + divider + "Data";
-            Util.Log("PATH: " + path);
-            LoadData();
-        }
-        //                                                                         --- Handling Server Data ------------
-        public void LoadData()
-        {
-            
-            if (!Directory.Exists(path))
-            {
-                Util.Log("Directory not found! Creating new directory..");
-                if (!Directory.Exists(path))
-                    Directory.CreateDirectory(path);
-                botData = new Dictionary<ulong, ServerData>();
-            }
-            else
-            {
-                if (botData is null) botData = new Dictionary<ulong, ServerData>();
-
-                String[] files = Directory.GetFiles(path);
-                foreach (string filePath in files)
-                {
-                    string[] pathArray = filePath.Split(divider);
-                    botData.Add(ulong.Parse(pathArray[^1].Substring(0, pathArray[^1].Length - 4)), 
-                        ServerData.Deserialize(File.ReadAllText(filePath)));
-                }
-            }
-        }
-
-        public void SaveServerData(ulong guildId)
-        {
-            File.WriteAllText(path + divider + guildId + ".txt", botData[guildId].Serialize(guildId));
-        }
-
-        private ServerData GetServerData(IGuild guild)
-        {
-            if (!botData.ContainsKey(guild.Id))
-            {
-                botData.Add(guild.Id, new ServerData());
-                SaveServerData(guild.Id);
-                return botData[guild.Id];
-            }
-            return botData[guild.Id];
-        }
-
-        //                                                                         --- Prefix --------------------------
+        //--- Prefix ---
         public string SetPrefix(IGuild guild, string prefix)
         {
-            GetServerData(guild).SetPrefix(prefix);
-            SaveServerData(guild.Id);
+            _dataService.GetServerData(guild.Id).SetPrefix(prefix);
             return $"Prefix set to {prefix}";
         }
         
@@ -81,7 +25,7 @@ namespace SimpBot
             return GetServerData(guild).GetPrefix();
         }
         
-        //                                                                         --- Help ----------------------------
+        //--- Help ---
         public async Task HelpAsync(SocketCommandContext context)
         {
             await context.Message.DeleteAsync();
@@ -96,11 +40,16 @@ namespace SimpBot
                                                  $"\n> ***__Bot Settings:__***" +
                                                  $"\n> **SetPrefix <prefix>** or use **SP <prefix>**: Use to set prefix for commands."  +
                                                  $"\n> **SetDefaultRole <@role>** or use **SDR <prefix>**: Use to set default role. Role will be added to every user joining the server from that point on. *(Does not affect current members)*" +
-                                                 $"\n> **RemoveDefaultRole** or use **RDR <prefix>**: Use to remove the default role function." 
+                                                 $"\n> **RemoveDefaultRole** or use **RDR <prefix>**: Use to remove the default role function."  +
+                                                 $"\n> " +
+                                                 $"\n> ***__Welcome Message:__***" +
+                                                 $"\n> **SetWelcomeMessage <channel> <message>** or use **SWM <channel> <message>**: Sets the message sent when people join." +
+                                                 $"\n> __Channel__: Tag the channel you want the message sent in." +
+                                                 $"\n> __Message__: Use ¤name¤ where you want to tag the person joining."
                                                  : ""));
         }
 
-        //                                                                         --- Default Role --------------------
+        //--- Default Role ---
         public IRole GetDefaultRole(IGuild guild)
         {
             if (GetServerData(guild).HasDefaultRole())
@@ -139,5 +88,8 @@ namespace SimpBot
             SaveServerData(guild.Id);
             return "Removed default role.";
         }
+
+        //--- Welcome Message ---
+        
     }
 }
