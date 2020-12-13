@@ -34,8 +34,8 @@ namespace SimpBot
                 DefaultRunMode = RunMode.Async
             });
             _dataService = dataService ?? new DataService();
-            _settingsService = settingsService ?? new BotSettingsService();
-            _wmService = wmService ?? new WelcomeMessageService();
+            _settingsService = settingsService ?? new BotSettingsService(_dataService);
+            _wmService = wmService ?? new WelcomeMessageService(_dataService);
         }
 
         public async Task InitalizeAsync()
@@ -82,6 +82,8 @@ namespace SimpBot
             if (_wmService.IsWelcomeMessageActive(usr.Guild))
             {
                 var welcomeMessage = _wmService.GetWelcomeMessage(usr.Guild);
+                var channel = (SocketTextChannel) usr.Guild.GetChannel(welcomeMessage.channel);
+                channel.SendMessageAsync(welcomeMessage.message.Replace("¤name¤", "<@" + usr.Id + ">"));
             }
             try
             {

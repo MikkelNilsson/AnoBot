@@ -17,10 +17,10 @@ namespace SimpBot
         
         public DataService()
         {
+            Util.Log("Initializing data service");
             if (Environment.CurrentDirectory.Contains('/')) divider = "/";
             else divider = "\\";
             path = Environment.CurrentDirectory + divider + "Data";
-            Util.Log("PATH: " + path);
             LoadData();
         }
         
@@ -63,5 +63,6 @@ namespace SimpBot
             }
             return botData[guildId];
         }
+        
     }
 }

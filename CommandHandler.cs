@@ -32,28 +32,35 @@ namespace SimpBot
         }
 
         private async Task HandleMessage(SocketMessage msg)
-        { 
-            var argPos = 0;
-            if (msg.Author.IsBot) return;
-
-            // Util.Log(msg.Author.ToString().Substring(0, msg.Author.ToString().Length - 5) + ": " + msg.Content);
-
-            SocketUserMessage userMsg = msg as SocketUserMessage;
-            if (userMsg is null) return;
-
-            var context = new SocketCommandContext(_client, userMsg);
-
-            if (context.Guild is null)
-                return;
-
-            if (!userMsg.HasStringPrefix(_settingsService.GetPrefix(context.Guild), ref argPos))
+        {
+            try
             {
-                if (userMsg.HasStringPrefix("!help", ref argPos))
-                    await _settingsService.HelpAsync(context);
-                return;
+                var argPos = 0;
+                if (msg.Author.IsBot) return;
+
+                // Util.Log(msg.Author.ToString().Substring(0, msg.Author.ToString().Length - 5) + ": " + msg.Content);
+
+                SocketUserMessage userMsg = msg as SocketUserMessage;
+                if (userMsg is null) return;
+
+                var context = new SocketCommandContext(_client, userMsg);
+
+                if (context.Guild is null)
+                    return;
+
+                if (!userMsg.HasStringPrefix(_settingsService.GetPrefix(context.Guild), ref argPos))
+                {
+                    if (userMsg.HasStringPrefix("!help", ref argPos))
+                        await _settingsService.HelpAsync(context);
+                    return;
+                }
+
+                await _cmdService.ExecuteAsync(context, argPos, _services);
             }
-            IUserMessage demsg = context.Message;
-            var result = await _cmdService.ExecuteAsync(context, argPos, _services);
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
     }
 }

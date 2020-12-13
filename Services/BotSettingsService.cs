@@ -13,6 +13,11 @@ namespace SimpBot
     {
         private DataService _dataService;
 
+        public BotSettingsService(DataService dataService)
+        {
+            _dataService = dataService;
+        }
+
         //--- Prefix ---
         public string SetPrefix(IGuild guild, string prefix)
         {
@@ -39,13 +44,13 @@ namespace SimpBot
                                              (gUser.GuildPermissions.Has(GuildPermission.Administrator) ? 
                                                  $"\n> ***__Bot Settings:__***" +
                                                  $"\n> **SetPrefix <prefix>** or use **SP <prefix>**: Use to set prefix for commands."  +
-                                                 $"\n> **SetDefaultRole <@role>** or use **SDR <prefix>**: Use to set default role. Role will be added to every user joining the server from that point on. *(Does not affect current members)*" +
-                                                 $"\n> **RemoveDefaultRole** or use **RDR <prefix>**: Use to remove the default role function."  +
+                                                 $"\n> **SetDefaultRole <@role>** or use **SDR <@role>**: Use to set default role. Role will be added to every user joining the server from that point on. *(Does not affect current members)*" +
+                                                 $"\n> **RemoveDefaultRole** or use **RDR**: Use to remove the default role function."  +
                                                  $"\n> " +
                                                  $"\n> ***__Welcome Message:__***" +
                                                  $"\n> **SetWelcomeMessage <channel> <message>** or use **SWM <channel> <message>**: Sets the message sent when people join." +
                                                  $"\n> __Channel__: Tag the channel you want the message sent in." +
-                                                 $"\n> __Message__: Use ¤name¤ where you want to tag the person joining."
+                                                 $"\n> __Message__: Use **¤name¤** where you want to tag the person joining."
                                                  : ""));
         }
 

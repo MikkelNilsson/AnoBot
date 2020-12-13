@@ -97,14 +97,9 @@ namespace SimpBot.Custom_Classes
             welcomeMessage = message;
         }
 
-        public string GetWelcomeMessage()
+        public (ulong channel, string message) GetWelcomeMessage()
         {
-            return welcomeMessage;
-        }
-
-        public ulong GetWelcomeChannel()
-        {
-            return welcomeChannel;
+            return (welcomeChannel, welcomeMessage);
         }
 
         public void RemoveWelcomeMessage()
