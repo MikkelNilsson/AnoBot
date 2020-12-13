@@ -43,7 +43,7 @@ namespace SimpBot
             string token;
             try
             {
-                token = System.IO.File.ReadAllText(Environment.CurrentDirectory + "/secret/botToken.txt");
+                token = System.IO.File.ReadAllText(Environment.CurrentDirectory + _dataService.Divider+ "secret" + _dataService.Divider + "botToken.txt");
             } catch
             {
                 Util.Log("Could not load token from file, trying env variables.");

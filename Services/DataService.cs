@@ -14,7 +14,12 @@ namespace SimpBot
         private string path;
 
         private string divider = "";
-        
+
+        public string Divider
+        {
+            get => divider;
+        }
+
         public DataService()
         {
             Util.Log("Initializing data service");
