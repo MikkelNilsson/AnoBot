@@ -18,6 +18,7 @@ namespace SimpBot
         public string SetPrefix(IGuild guild, string prefix)
         {
             _dataService.GetServerData(guild.Id).SetPrefix(prefix);
+            _dataService.SaveServerData(guild.Id);
             return $"Prefix set to {prefix}";
         }
         
@@ -102,8 +103,5 @@ namespace SimpBot
             _dataService.SaveServerData(guild.Id);
             return "Removed default role.";
         }
-
-        //--- Welcome Message ---
-        
     }
 }

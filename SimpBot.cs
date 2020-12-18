@@ -56,6 +56,7 @@ namespace SimpBot
             _services = SetupServices();
 
             _client.UserJoined += UserJoined;
+            _client.UserLeft += UserLeft;
 
             var cmdHandler = new CommandHandler(_client, _cmdService, _services, _settingsService);
             await cmdHandler.InitializeAsync();
@@ -67,6 +68,7 @@ namespace SimpBot
             await Task.Delay(-1);
         }
 
+
         private IServiceProvider SetupServices()
             => new ServiceCollection()
             .AddSingleton(_client)
@@ -76,6 +78,10 @@ namespace SimpBot
             .AddSingleton(_wmService)
             .BuildServiceProvider();
 
+        private Task UserLeft(SocketGuildUser arg)
+        {
+            return Task.CompletedTask;
+        }
 
         private async Task UserJoined(SocketGuildUser usr)
         {
