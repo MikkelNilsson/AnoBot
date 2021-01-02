@@ -16,10 +16,11 @@ namespace SimpBot
         private DataService _dataService;
         private BotSettingsService _settingsService;
         private WelcomeMessageService _wmService;
+        private LeaveMessageService _lmService;
 
         public SimpBot(DiscordSocketClient client = null, CommandService cmdService = null,
             BotSettingsService settingsService = null, WelcomeMessageService wmService = null,
-            DataService dataService = null)
+            DataService dataService = null, LeaveMessageService lmService = null)
         {
             _client = client ?? new DiscordSocketClient(new DiscordSocketConfig
             {
@@ -36,6 +37,7 @@ namespace SimpBot
             _dataService = dataService ?? new DataService();
             _settingsService = settingsService ?? new BotSettingsService(_dataService);
             _wmService = wmService ?? new WelcomeMessageService(_dataService);
+            _lmService = lmService ?? new LeaveMessageService(_dataService);
         }
 
         public async Task InitalizeAsync()
@@ -54,11 +56,12 @@ namespace SimpBot
 
             _client.Log += Util.Log;
             _services = SetupServices();
+            _services.GetService(typeof(DiscordSocketClient));
 
             _client.UserJoined += UserJoined;
             _client.UserLeft += UserLeft;
 
-            var cmdHandler = new CommandHandler(_client, _cmdService, _services, _settingsService);
+            var cmdHandler = new CommandHandler(_client , _cmdService, _services, _settingsService);
             await cmdHandler.InitializeAsync();
 
             await _client.SetStatusAsync(UserStatus.DoNotDisturb);
@@ -74,12 +77,20 @@ namespace SimpBot
             .AddSingleton(_client)
             .AddSingleton(_cmdService)
             .AddSingleton(_dataService)
+            .AddSingleton(_lmService)
             .AddSingleton(_settingsService)
             .AddSingleton(_wmService)
             .BuildServiceProvider();
 
         private Task UserLeft(SocketGuildUser arg)
         {
+            if (_dataService.GetServerData(arg.Guild.Id).HasLeaveMessage())
+            {
+                var channel =
+                    arg.Guild.GetChannel(_dataService.GetServerData(arg.Guild.Id).getLeaveChannel()) as
+                        SocketTextChannel;
+                channel.SendMessageAsync(arg.Username + (!(arg.Nickname is null) ? " (" + arg.Nickname + ")" : "") + " left the server.");
+            }
             return Task.CompletedTask;
         }
 

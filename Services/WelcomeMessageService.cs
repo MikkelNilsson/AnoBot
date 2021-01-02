@@ -14,7 +14,7 @@ namespace SimpBot
         
         public string SetWelcomeMessage(SocketGuild guild, string command)
         {
-            String[] arguments = command.Split(" ", 3);
+            string[] arguments = command.Split(" ", 3);
 
             if (arguments[1].StartsWith("<#") && arguments[1].EndsWith(">"))
             {
@@ -38,7 +38,7 @@ namespace SimpBot
         public string RemoveWelcomeMessage(SocketGuild guild)
         {
             if (!_dataService.GetServerData(guild.Id).HasWelcomeMessage())
-                return "welcome message is not active.";
+                return "Welcome message is not active.";
             
             _dataService.GetServerData(guild.Id).RemoveWelcomeMessage();
             _dataService.SaveServerData(guild.Id);

@@ -15,5 +15,7 @@ namespace SimpBot
             Console.WriteLine(DateTime.UtcNow.ToString("[MM/dd/yyyy HH:mm:ss] ") + logMessage.Message);
             return Task.CompletedTask;
         }
+        
+        //TODO Create a parse function, to parse channels. Used for ActivateLeaveMessage and SetWelcomeMessage.
     }
 }

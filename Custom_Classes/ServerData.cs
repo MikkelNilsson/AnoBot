@@ -9,6 +9,7 @@ namespace SimpBot.Custom_Classes
         private ulong defaultRole;
         private ulong welcomeChannel;
         private string welcomeMessage;
+        private ulong leaveChannel;
 
         public ServerData()
         {
@@ -16,6 +17,7 @@ namespace SimpBot.Custom_Classes
             defaultRole = 0;
             welcomeChannel = 0;
             welcomeMessage = "";
+            leaveChannel = 0;
         }
         
         //--Parseing/Serializing Data--
@@ -36,6 +38,9 @@ namespace SimpBot.Custom_Classes
                     case("welcomeMessage"):
                         res.ParseWelcomeMessage(sarr[1]);
                         break;
+                    case("leaveMessage"):
+                        res.leaveChannel = ulong.Parse(sarr[1]);
+                        break;
                 }
             }
 
@@ -52,9 +57,10 @@ namespace SimpBot.Custom_Classes
         public string Serialize(ulong guildId)
         {
             return (
-                "prefix: " + prefix + "\n" +
-                "defaultRole: " + defaultRole + "\n" +
-                "welcomeMessage: " + welcomeChannel + "message: " + welcomeMessage
+                (prefix != "!" ? "prefix: " + prefix + "\n" : "") +
+                (HasDefaultRole() ? "defaultRole: " + defaultRole + "\n" : "") +
+                (HasWelcomeMessage() ? "welcomeMessage: " + welcomeChannel + "message: " + welcomeMessage + "\n" : "") +
+                (HasLeaveMessage() ? "leaveMessage: " + leaveChannel + "\n" : "")
             );
         }
         
@@ -111,6 +117,27 @@ namespace SimpBot.Custom_Classes
         public bool HasWelcomeMessage()
         {
             return welcomeChannel != 0;
+        }
+        
+        //--Leave Message--
+        public void ActivateLeaveMessage(ulong channel)
+        {
+            leaveChannel = channel;
+        }
+
+        public void DisableLeaveMessage()
+        {
+            leaveChannel = 0;
+        }
+
+        public bool HasLeaveMessage()
+        {
+            return leaveChannel != 0;
+        }
+
+        public ulong getLeaveChannel()
+        {
+            return leaveChannel;
         }
     }
 }

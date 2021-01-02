@@ -22,7 +22,6 @@ namespace SimpBot.Modules
         //TODO: Make sure bot can write in the channel suggested (Channel permissions)
         public async Task SetWelcomeMessage(string remainder)
         {
-            Console.WriteLine("hmm?" + Context.Message.Content);
             await ReplyAsync(_wms.SetWelcomeMessage(Context.Guild, Context.Message.Content));
         }
 

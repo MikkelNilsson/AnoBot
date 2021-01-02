@@ -54,6 +54,9 @@ namespace SimpBot
                     "__Channel__: Tag the channel you want the message sent in.\n" +
                     "__Message__: Use *¤name¤* where you want to tag the person joining.\n" +
                     "`RemoveWelcomeMessage` or use `RWM`: Removes the current active welcome message.");
+                res.AddField("**__Leave Message:__**",
+                    "`LeaveMessage <channel>` or use `LME <channel>`: A message is sent when a user leaves the server in the specified channel.\n" +
+                    "`RemoveLeaveMessage` or use `RLM`: Disables the leave message function.");
             }
 
             var embed = res.WithAuthor(context.Client.CurrentUser)
