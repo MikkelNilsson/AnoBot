@@ -1,17 +1,44 @@
 ﻿using Discord.WebSocket;
 using System;
+using System.Threading.Tasks;
 
 namespace SimpBot
 {
     public class WelcomeMessageService
     {
         private DataService _dataService;
+        private DiscordSocketClient _client;
+        private BotSettingsService _settings;
 
-        public WelcomeMessageService(DataService dataService)
+        public WelcomeMessageService(DataService dataService, DiscordSocketClient client, BotSettingsService settings)
         {
             _dataService = dataService;
+            _client = client;
+            _settings = settings;
         }
         
+        public async Task InitializeAsync()
+        {
+            _client.UserJoined += PlayWelcomeMessage;
+        }
+
+        private async Task PlayWelcomeMessage(SocketGuildUser usr)
+        {
+            try
+            {
+                if (IsWelcomeMessageActive(usr.Guild))
+                {
+                    var welcomeMessage = GetWelcomeMessage(usr.Guild);
+                    var channel = (SocketTextChannel) usr.Guild.GetChannel(welcomeMessage.channel);
+                    await channel.SendMessageAsync(welcomeMessage.message.Replace("¤name¤", "<@" + usr.Id + ">"));
+                }
+            }
+            catch (Exception e)
+            {
+                Util.Log(e.Message +  e.StackTrace);
+            }
+        }
+
         public string SetWelcomeMessage(SocketGuild guild, string command)
         {
             string[] arguments = command.Split(" ", 3);
@@ -54,5 +81,6 @@ namespace SimpBot
         {
             return _dataService.GetServerData(usrGuild.Id).GetWelcomeMessage();
         }
+
     }
 }

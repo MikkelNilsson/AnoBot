@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using System;
 using SimpBot.Custom_Classes;
 using Microsoft.Extensions.DependencyInjection;
+using Victoria;
+using SimpBot.Services;
 
 namespace SimpBot
 {
@@ -14,13 +16,8 @@ namespace SimpBot
         private CommandService _cmdService;
         private IServiceProvider _services;
         private DataService _dataService;
-        private BotSettingsService _settingsService;
-        private WelcomeMessageService _wmService;
-        private LeaveMessageService _lmService;
 
-        public SimpBot(DiscordSocketClient client = null, CommandService cmdService = null,
-            BotSettingsService settingsService = null, WelcomeMessageService wmService = null,
-            DataService dataService = null, LeaveMessageService lmService = null)
+        public SimpBot(DiscordSocketClient client = null, CommandService cmdService = null, DataService dataService = null)
         {
             _client = client ?? new DiscordSocketClient(new DiscordSocketConfig
             {
@@ -35,9 +32,6 @@ namespace SimpBot
                 DefaultRunMode = RunMode.Async
             });
             _dataService = dataService ?? new DataService();
-            _settingsService = settingsService ?? new BotSettingsService(_dataService);
-            _wmService = wmService ?? new WelcomeMessageService(_dataService);
-            _lmService = lmService ?? new LeaveMessageService(_dataService);
         }
 
         public async Task InitalizeAsync()
@@ -52,16 +46,19 @@ namespace SimpBot
                 token = System.Environment.GetEnvironmentVariable("botToken");
             }
             await _client.LoginAsync(TokenType.Bot, token);
+            token = String.Empty;
             await _client.StartAsync();
 
             _client.Log += Util.Log;
             _services = SetupServices();
-            _services.GetService(typeof(DiscordSocketClient));
-
-            _client.UserJoined += UserJoined;
+            
             _client.UserLeft += UserLeft;
+            
+            await _services.GetRequiredService<BotSettingsService>().InitializeAsync();
+            await _services.GetRequiredService<MusicService>().InitalizeAsync();
+            await _services.GetRequiredService<WelcomeMessageService>().InitializeAsync();
 
-            var cmdHandler = new CommandHandler(_client , _cmdService, _services, _settingsService);
+            var cmdHandler = new CommandHandler(_client , _cmdService, _services, _services.GetRequiredService<BotSettingsService>());
             await cmdHandler.InitializeAsync();
 
             await _client.SetStatusAsync(UserStatus.DoNotDisturb);
@@ -77,9 +74,12 @@ namespace SimpBot
             .AddSingleton(_client)
             .AddSingleton(_cmdService)
             .AddSingleton(_dataService)
-            .AddSingleton(_lmService)
-            .AddSingleton(_settingsService)
-            .AddSingleton(_wmService)
+            .AddSingleton<LeaveMessageService>()
+            .AddSingleton<LavaNode>()
+            .AddSingleton<LavaConfig>()
+            .AddSingleton<MusicService>()
+            .AddSingleton<BotSettingsService>()
+            .AddSingleton<WelcomeMessageService>()
             .BuildServiceProvider();
 
         private Task UserLeft(SocketGuildUser arg)
@@ -92,23 +92,6 @@ namespace SimpBot
                 channel.SendMessageAsync(arg.Username + (!(arg.Nickname is null) ? " (" + arg.Nickname + ")" : "") + " left the server.");
             }
             return Task.CompletedTask;
-        }
-
-        private async Task UserJoined(SocketGuildUser usr)
-        {
-            if (_wmService.IsWelcomeMessageActive(usr.Guild))
-            {
-                var welcomeMessage = _wmService.GetWelcomeMessage(usr.Guild);
-                var channel = (SocketTextChannel) usr.Guild.GetChannel(welcomeMessage.channel);
-                channel.SendMessageAsync(welcomeMessage.message.Replace("¤name¤", "<@" + usr.Id + ">"));
-            }
-            try
-            {
-                await usr.AddRoleAsync(_settingsService.GetDefaultRole(usr.Guild));
-            } catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Discord.WebSocket;
 
 namespace SimpBot
@@ -6,9 +7,27 @@ namespace SimpBot
     public class LeaveMessageService
     {
         private DataService _dataService;
-        public LeaveMessageService(DataService dataService)
+        private DiscordSocketClient _client;
+        public LeaveMessageService(DataService dataService, DiscordSocketClient client)
         {
             _dataService = dataService;
+            _client = client;
+        }
+
+        public async Task InitializeAsync()
+        {
+            _client.UserJoined += SendLeaveMessage;
+        }
+
+        private async Task SendLeaveMessage(SocketGuildUser arg)
+        {
+            if (_dataService.GetServerData(arg.Guild.Id).HasLeaveMessage())
+            {
+                var channel =
+                    arg.Guild.GetChannel(_dataService.GetServerData(arg.Guild.Id).getLeaveChannel()) as
+                        SocketTextChannel;
+                await channel.SendMessageAsync(arg.Username + (!(arg.Nickname is null) ? " (" + arg.Nickname + ")" : "") + " left the server.");
+            }
         }
 
         public string SetLeaveMessage(SocketGuild guild, string command)

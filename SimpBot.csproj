@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.3.0-dev-20201119.4" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.0" />
+    <PackageReference Include="Victoria" Version="5.1.11" />
   </ItemGroup>
 
   <ItemGroup>

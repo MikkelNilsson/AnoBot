@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using System;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using System.Threading.Tasks;
@@ -8,10 +9,29 @@ namespace SimpBot
     public class BotSettingsService
     {
         private DataService _dataService;
+        private DiscordSocketClient _client;
 
-        public BotSettingsService(DataService dataService)
+        public BotSettingsService(DataService dataService, DiscordSocketClient client)
         {
             _dataService = dataService;
+            _client = client;
+        }
+
+        public async Task InitializeAsync()
+        {
+                _client.UserJoined += AddDefaultRole;
+        }
+
+        private async Task AddDefaultRole(SocketGuildUser usr)
+        {
+            try
+            {
+                await usr.AddRoleAsync(GetDefaultRole(usr.Guild));
+            }
+            catch (Exception e)
+            {
+                Util.Log(e.Message + ": " + e.StackTrace);
+            }
         }
 
         //--- Prefix ---
