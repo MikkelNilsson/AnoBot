@@ -60,6 +60,7 @@ namespace SimpBot.Modules
         }
 
         [Command("Play")]
+        [Alias("P")]
         public async Task Play([Remainder]string query)
         {
             if (!_musicService.NodeHasPlayer(Context.Guild))
@@ -77,6 +78,7 @@ namespace SimpBot.Modules
         }
 
         [Command("Skip")]
+        [Alias("N")]
         public async Task Skip()
         {
             String response = (await _musicService.SkipAsync(Context.Guild));

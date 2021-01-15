@@ -83,7 +83,7 @@ namespace SimpBot.Services
                 return "Load Failed!";
             }
 
-            Console.WriteLine("SEARCHING FOR: " + searchQuery + " SEARCH RESULT: " + results.LoadStatus.ToString());
+            //Console.WriteLine("SEARCHING FOR: " + searchQuery + " SEARCH RESULT: " + results.LoadStatus.ToString());
 
             var track = results.Tracks.FirstOrDefault();
 
@@ -165,14 +165,11 @@ namespace SimpBot.Services
                 await _player.ResumeAsync();
                 return "Music resumed!";
             }
-            else
-            {
-                if (command.Equals("resume"))
-                    return "Music is already playing!";
+            if (command.Equals("resume"))
+                return "Music is already playing!";
 
-                await _player.PauseAsync();
-                return "Paused music!";
-            }
+            await _player.PauseAsync();
+            return "Paused music!";
         }
 
 

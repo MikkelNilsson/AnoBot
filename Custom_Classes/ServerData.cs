@@ -51,7 +51,7 @@ namespace SimpBot.Custom_Classes
         {
             string[] dataarray = raw.Split("message: ", 2);
             welcomeChannel = ulong.Parse(dataarray[0]);
-            welcomeMessage = dataarray[1];
+            welcomeMessage = dataarray[1].Replace("|NewlinE|", "\n");
         }
         
         public string Serialize(ulong guildId)
@@ -59,7 +59,7 @@ namespace SimpBot.Custom_Classes
             return (
                 (prefix != "!" ? "prefix: " + prefix + "\n" : "") +
                 (HasDefaultRole() ? "defaultRole: " + defaultRole + "\n" : "") +
-                (HasWelcomeMessage() ? "welcomeMessage: " + welcomeChannel + "message: " + welcomeMessage + "\n" : "") +
+                (HasWelcomeMessage() ? "welcomeMessage: " + welcomeChannel + "message: " + welcomeMessage.Replace("\n", "|NewlinE|") + "\n" : "") +
                 (HasLeaveMessage() ? "leaveMessage: " + leaveChannel + "\n" : "")
             );
         }
