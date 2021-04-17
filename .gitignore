@@ -406,3 +406,6 @@ Desktop.ini
 **/.vs
 **/secret/
 obj/
+
+# Shell script
+.bat
