@@ -405,7 +405,10 @@ Desktop.ini
 **/.idea/
 **/.vs
 **/secret/
+
+
+bin/
 obj/
 
-# Shell script
-.bat
+# Shell scripts
+*.bat
