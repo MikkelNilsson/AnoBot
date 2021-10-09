@@ -59,6 +59,34 @@ namespace SimpBot.Modules
 
         }
 
+        [Command("FastForward")]
+        [Alias("FF")]
+        public async Task FastForward([Remainder]string secs)
+        {
+            if (!_musicService.NodeHasPlayer(Context.Guild))
+            {
+                await ReplyAsync("Bot is not connected to a voicechannel.");
+                return;
+            }
+
+            if (Int32.TryParse(secs.Trim(), out int sec))
+            {
+                if (sec > 0)
+                {
+                    await ReplyAsync(await _musicService.FastForward(Context, sec));
+                }
+                else
+                {
+                    await ReplyAsync("Negative amount: " + secs + " is not valid.");
+                }
+
+            }
+            else
+            {
+                await ReplyAsync("\'*" + secs + "*\' is not a valid number.");
+            }
+        }
+
         [Command("Play")]
         [Alias("P")]
         public async Task Play([Remainder]string query)
@@ -66,8 +94,8 @@ namespace SimpBot.Modules
             if (!_musicService.NodeHasPlayer(Context.Guild))
                 await Join();
             Util.Log($"MUSIC: Trying to play {query}");
-            var result = _musicService.PlayAsync(query, Context.Guild);
-            await ReplyAsync(result.Result);
+            var result = await _musicService.PlayAsync(query, Context.Guild);
+            await ReplyAsync(result);
         }
 
         [Command("Stop")]

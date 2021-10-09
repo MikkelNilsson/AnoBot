@@ -36,17 +36,21 @@ namespace SimpBot
 
         public async Task InitalizeAsync()
         {
-            string token;
+            string token = "";
             try
             {
-                token = System.IO.File.ReadAllText(Environment.CurrentDirectory + _dataService.Divider+ "secret" + _dataService.Divider + "botToken.txt");
-            } catch
+                token = await System.IO.File.ReadAllTextAsync(Environment.CurrentDirectory + _dataService.Divider +
+                                                              "secret" + _dataService.Divider + "botToken.txt");
+            }
+            catch
             {
                 Util.Log("Could not load token from file, trying env variables.");
                 token = System.Environment.GetEnvironmentVariable("botToken");
             }
+
+
             await _client.LoginAsync(TokenType.Bot, token);
-            token = String.Empty;
+            token = "";
             await _client.StartAsync();
 
             _client.Log += Util.Log;
@@ -55,13 +59,13 @@ namespace SimpBot
             _client.UserLeft += UserLeft;
             
             await _services.GetRequiredService<BotSettingsService>().InitializeAsync();
-            await _services.GetRequiredService<MusicService>().InitalizeAsync();
+            await _services.GetRequiredService<MusicService>().InitializeAsync();
             await _services.GetRequiredService<WelcomeMessageService>().InitializeAsync();
 
             var cmdHandler = new CommandHandler(_client , _cmdService, _services, _services.GetRequiredService<BotSettingsService>());
             await cmdHandler.InitializeAsync();
 
-            await _client.SetStatusAsync(UserStatus.DoNotDisturb);
+            await _client.SetStatusAsync(UserStatus.Online);
             await _client.SetActivityAsync(new BotActivity());
 
 
@@ -76,7 +80,7 @@ namespace SimpBot
             .AddSingleton(_dataService)
             .AddSingleton<LeaveMessageService>()
             .AddSingleton<LavaNode>()
-            .AddSingleton<LavaConfig>()
+            .AddSingleton(new LavaConfig{SelfDeaf = false})
             .AddSingleton<MusicService>()
             .AddSingleton<BotSettingsService>()
             .AddSingleton<WelcomeMessageService>()
@@ -89,7 +93,7 @@ namespace SimpBot
                 var channel =
                     arg.Guild.GetChannel(_dataService.GetServerData(arg.Guild.Id).getLeaveChannel()) as
                         SocketTextChannel;
-                channel.SendMessageAsync(arg.Username + (!(arg.Nickname is null) ? " (" + arg.Nickname + ")" : "") + " left the server.");
+                channel?.SendMessageAsync(arg.Username + (!(arg.Nickname is null) ? " (" + arg.Nickname + ")" : "") + " left the server.");
             }
             return Task.CompletedTask;
         }

@@ -81,7 +81,7 @@ namespace SimpBot
 
             var embed = res.WithAuthor(context.Client.CurrentUser)
                 .WithFooter(
-                    (context.User.Id == 614083078100484106 ? "❤💕Thanks for using WUBot!💕❤" : "Thanks for using WUBot!"))
+                    (context.User.Id == 614083078100484106 ? "❤💕Thanks for using WUBot, Thomas!💕❤" : "Thanks for using WUBot!"))
                 .WithCurrentTimestamp()
                 .Build();
             await dmChannel.SendMessageAsync(embed:embed);
