@@ -62,7 +62,7 @@ namespace SimpBot
                 Color = Color.Blue
             };
             
-            if (gUser.GuildPermissions.Has(GuildPermission.Administrator)) {
+            if (gUser.GuildPermissions.Has(GuildPermission.ManageGuild) || Util.isAno(context)) {
                 res.AddField("**__Bot Settings:__**",
                     "`SetPrefix <prefix>` or use `SP <prefix>`: Use to set prefix for commands.");
                 res.AddField("**__Default Role:__**",
@@ -81,7 +81,7 @@ namespace SimpBot
 
             var embed = res.WithAuthor(context.Client.CurrentUser)
                 .WithFooter(
-                    "Thanks for using WUBot!")
+                    (context.User.Id == 614083078100484106 ? "❤💕Thanks for using WUBot!💕❤" : "Thanks for using WUBot!"))
                 .WithCurrentTimestamp()
                 .Build();
             await dmChannel.SendMessageAsync(embed:embed);

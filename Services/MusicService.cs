@@ -8,9 +8,15 @@ using Victoria.Enums;
 using System.Linq;
 using System.Web;
 using Discord.Commands;
+using Victoria.Payloads;
 
 namespace SimpBot.Services
 {
+    
+    //TODO Create fast forward: !ff 15 -> skip 15 secs of the song
+    //TODO move functionality: !move 15 1 -> moves song in position 15 to position 1
+    //TODO queue functionality: !queue -> pretty print queue somehow.
+    //TODO BASSBOOST funtionality: !bassboost 2 -> bassboost 2 out of 10
     public class MusicService
     {
         private LavaConfig _lavaConfig;
@@ -196,7 +202,7 @@ namespace SimpBot.Services
 
         public bool HasMusicPrivilege(SocketCommandContext context)
         {
-            return context.User.Id == 215044487871725573;
+            return (Util.isAno(context) || context.Guild.Id == 681785163595644929);
         }
     }
 }

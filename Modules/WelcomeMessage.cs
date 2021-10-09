@@ -18,7 +18,7 @@ namespace SimpBot.Modules
         //TODO: Fix so that the whole of the command gets parsed through
         [Command("SetWelcomeMessage", true)] //might be a fix on ^
         [Alias("SWM")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
         //TODO: Make sure bot can write in the channel suggested (Channel permissions)
         public async Task SetWelcomeMessage(string remainder)
         {
@@ -27,7 +27,7 @@ namespace SimpBot.Modules
 
         [Command("RemoveWelcomeMessage", true)]
         [Alias("RWM")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
         public async Task RemoveWelcomeMessage()
         {
             await ReplyAsync(_wms.RemoveWelcomeMessage(Context.Guild));

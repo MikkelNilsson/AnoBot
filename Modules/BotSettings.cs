@@ -15,7 +15,7 @@ namespace SimpBot.Modules
 
         [Command("SetPrefix")]
         [Alias("SP")]
-        [RequireUserPermission(Discord.GuildPermission.Administrator)]
+        [RequireUserPermission(Discord.GuildPermission.ManageGuild)]
         public async Task Setprefix(string remainder)
         {
             _settingsService.SetPrefix(Context.Guild, remainder.Trim());
@@ -32,7 +32,7 @@ namespace SimpBot.Modules
 
         [Command("SetDefaultRole")]
         [Alias("SDR")]
-        [RequireUserPermission(Discord.GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
         [RequireBotPermission(GuildPermission.ManageMessages)]
         [RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task SetDefaultRole(string remainder)
@@ -43,7 +43,7 @@ namespace SimpBot.Modules
 
         [Command("RemoveDefaultRole", true)]
         [Alias("RDR")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
         public async Task RemoveDefaultRole()
         {
             await ReplyAsync(_settingsService.RemoveDefaultRole(Context.Guild));

@@ -14,7 +14,7 @@ namespace SimpBot.Modules
 
         [Command("LeaveMessage")]
         [Alias("LME")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
         public async Task SetLeaveMessage(string remainder)
         {
             await ReplyAsync(_leaveService.SetLeaveMessage(Context.Guild, remainder));
@@ -22,7 +22,7 @@ namespace SimpBot.Modules
         
         [Command("RemoveLeaveMessage")]
         [Alias("RLM")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
         public async Task RemoveLeaveMessage(string remainder)
         {
             await ReplyAsync(_leaveService.RemoveLeaveMessage(Context.Guild));
