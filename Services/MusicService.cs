@@ -63,6 +63,7 @@ namespace SimpBot.Services
             {
                 Util.Log($"MUSIC: Youtube search: {query}");
                 results = await _lavaNode.SearchYouTubeAsync(query);
+                
             }
 
             switch (results.LoadStatus)
@@ -113,7 +114,15 @@ namespace SimpBot.Services
                 return "Fast forward extended track length.";
             }
             await _player.SeekAsync(_player.Track.Position + TimeSpan.FromSeconds(secs));
+            
             return $"Fast forwarded to {(_player.Track.Position.TotalHours >= 1 ? _player.Track.Position.Hours + ":" : "") + _player.Track.Position.Minutes + ":" + _player.Track.Position.Seconds}.";
+        }
+
+        public async Task<string> Shuffle(SocketGuild guild)
+        {
+            SetPlayer(guild);
+            _player.Queue.Shuffle();
+            return "Queue Shuffled";
         }
 
         public async Task LeaveAsync(SocketVoiceChannel voiceChannel)
@@ -215,7 +224,7 @@ namespace SimpBot.Services
 
         public bool HasMusicPrivilege(SocketCommandContext context)
         {
-            return (Util.isAno(context) || context.Guild.Id == 681785163595644929);
+            return (Util.isAno(context) || context.Guild.Id != 534100287179194368);
         }
     }
 }

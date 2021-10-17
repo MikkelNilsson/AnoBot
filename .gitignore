@@ -412,3 +412,6 @@ obj/
 
 # Shell scripts
 *.bat
+
+# Data
+[Dd]ata/

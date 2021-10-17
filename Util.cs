@@ -19,7 +19,7 @@ namespace SimpBot
 
         public static bool isAno(SocketCommandContext context)
         {
-            return (context.User.Id == 215044487871725573);
+            return (context.User.Id == 215044487871725573 || context.User.Id == 763301348078387260);
         }
         
         //TODO Create a parse function, to parse channels. Used for ActivateLeaveMessage and SetWelcomeMessage.

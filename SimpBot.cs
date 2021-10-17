@@ -24,7 +24,7 @@ namespace SimpBot
                 AlwaysDownloadUsers = true,
                 MessageCacheSize = 50,
                 LogLevel = LogSeverity.Verbose
-            }) ;
+            });
             _cmdService = cmdService ?? new CommandService(new CommandServiceConfig
             {
                 LogLevel = LogSeverity.Verbose,
@@ -55,14 +55,14 @@ namespace SimpBot
 
             _client.Log += Util.Log;
             _services = SetupServices();
-            
+
             _client.UserLeft += UserLeft;
-            
+
             await _services.GetRequiredService<BotSettingsService>().InitializeAsync();
             await _services.GetRequiredService<MusicService>().InitializeAsync();
             await _services.GetRequiredService<WelcomeMessageService>().InitializeAsync();
 
-            var cmdHandler = new CommandHandler(_client , _cmdService, _services, _services.GetRequiredService<BotSettingsService>());
+            var cmdHandler = new CommandHandler(_client, _cmdService, _services, _services.GetRequiredService<BotSettingsService>());
             await cmdHandler.InitializeAsync();
 
             await _client.SetStatusAsync(UserStatus.Online);
@@ -80,7 +80,7 @@ namespace SimpBot
             .AddSingleton(_dataService)
             .AddSingleton<LeaveMessageService>()
             .AddSingleton<LavaNode>()
-            .AddSingleton(new LavaConfig{SelfDeaf = false})
+            .AddSingleton<LavaConfig>()
             .AddSingleton<MusicService>()
             .AddSingleton<BotSettingsService>()
             .AddSingleton<WelcomeMessageService>()

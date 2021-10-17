@@ -94,8 +94,8 @@ namespace SimpBot.Modules
             if (!_musicService.NodeHasPlayer(Context.Guild))
                 await Join();
             Util.Log($"MUSIC: Trying to play {query}");
-            var result = await _musicService.PlayAsync(query, Context.Guild);
-            await ReplyAsync(result);
+            var result = _musicService.PlayAsync(query, Context.Guild);
+            await ReplyAsync(result.Result);
         }
 
         [Command("Stop")]
@@ -130,5 +130,12 @@ namespace SimpBot.Modules
         {
             await ReplyAsync(await _musicService.PauseOrResumeAsync(Context.Guild, "resume"));
         }
+
+        [Command("Shuffle")]
+        public async Task Shuffle()
+        {
+            await ReplyAsync(await _musicService.Shuffle(Context.Guild));
+        }
+            
     }
 }
