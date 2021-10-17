@@ -136,7 +136,7 @@ namespace SimpBot.Modules
         [Command("Shuffle")]
         public async Task Shuffle()
         {
-            await ReplyAsync(await _musicService.Shuffle(Context.Guild));
+            await ReplyAsync(_musicService.Shuffle(Context.Guild));
         }
 
         [Command("Queue")]

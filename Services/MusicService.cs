@@ -21,6 +21,9 @@ namespace SimpBot.Services
     //Done TODO queue a playlist: !playlist "link" -> queue every song in playlist (up to 25 songs)
     //TODO Soundcloud play with specific soundcloud link or !soundcloud
     //TODO Automatic disconnect after 5 mins with nobody in the channel
+    //TODO spotify playlist retrieve songtitles and stuff to play from yt
+    //TODO setting: clear queue on leave
+    //TODO clear functionality -> clear queue.
     public class MusicService
     {
         private readonly LavaConfig _lavaConfig;
@@ -120,11 +123,15 @@ namespace SimpBot.Services
             return $"Fast forwarded to {(_player.Track.Position.TotalHours >= 1 ? _player.Track.Position.Hours + ":" : "") + _player.Track.Position.Minutes + ":" + _player.Track.Position.Seconds}.";
         }
 
-        public async Task<string> Shuffle(SocketGuild guild)
+        public string Shuffle(SocketGuild guild)
         {
             SetPlayer(guild);
+            if (_player.Queue.Count <= 0)
+            {
+                return "Queue empty, nothing to shuffle.";
+            }
             _player.Queue.Shuffle();
-            return "Queue Shuffled";
+            return "Queue Shuffled.";
         }
 
         public async Task LeaveAsync(SocketVoiceChannel voiceChannel)
