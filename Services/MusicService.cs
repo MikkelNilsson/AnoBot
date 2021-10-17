@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using System;
+using System.Collections;
 using System.Threading.Tasks;
 using Victoria;
 using Victoria.EventArgs;
@@ -48,6 +49,7 @@ namespace SimpBot.Services
         private void SetPlayer(IGuild guild)
         {
             _player = _lavaNode.GetPlayer(guild);
+            
         }
 
         public async Task<string> PlayAsync(string query, IGuild guild)
@@ -198,6 +200,12 @@ namespace SimpBot.Services
 
             await _player.PauseAsync();
             return "Paused music!";
+        }
+
+        public string Queue()
+        {
+            //TODO create queue things
+            return "";
         }
 
 

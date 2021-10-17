@@ -11,10 +11,12 @@ namespace SimpBot.Modules
     public class Music : ModuleBase<SocketCommandContext>
     {
         private MusicService _musicService;
+        private DataService _dataService;
         
-        public Music(MusicService musicService)
+        public Music(MusicService musicService, DataService dataService)
         {
             _musicService = musicService;
+            _dataService = dataService;
         }
 
         [Command("Join")]
@@ -28,7 +30,7 @@ namespace SimpBot.Modules
             }
 
             var user = Context.User as SocketGuildUser;
-            if (user.VoiceChannel is null)
+            if (user?.VoiceChannel is null)
             {
                 await ReplyAsync("You need to connect to a voice channel!");
                 return;
@@ -136,6 +138,13 @@ namespace SimpBot.Modules
         {
             await ReplyAsync(await _musicService.Shuffle(Context.Guild));
         }
-            
+
+        [Command("Queue")]
+        public async Task Queue()
+        {
+            var data = _dataService.GetServerData(Context.Guild.Id);
+            data.MusicQueueMessage = await ReplyAsync(_musicService.Queue());
+
+        }
     }
 }
