@@ -13,7 +13,7 @@ using Victoria.Responses.Rest;
 
 namespace SimpBot.Services
 {
-    
+
     //Done TODO Create fast forward: !ff 15 -> skip 15 secs of the song
     //TODO move functionality: !move 15 1 -> moves song in position 15 to position 1
     //TODO queue functionality: !queue -> pretty print queue somehow.
@@ -49,7 +49,7 @@ namespace SimpBot.Services
         private void SetPlayer(IGuild guild)
         {
             _player = _lavaNode.GetPlayer(guild);
-            
+
         }
 
         public async Task<string> PlayAsync(string query, IGuild guild)
@@ -65,7 +65,7 @@ namespace SimpBot.Services
             {
                 Util.Log($"MUSIC: Youtube search: {query}");
                 results = await _lavaNode.SearchYouTubeAsync(query);
-                
+
             }
 
             switch (results.LoadStatus)
@@ -78,7 +78,7 @@ namespace SimpBot.Services
                 case LoadStatus.SearchResult:
                 case LoadStatus.TrackLoaded:
                     var track = results.Tracks.FirstOrDefault();
-                    if(_player.PlayerState == PlayerState.Playing)
+                    if (_player.PlayerState == PlayerState.Playing)
                     {
                         _player.Queue.Enqueue(track);
                         return $"*{track.Title}* has been added to the queue.";
@@ -116,7 +116,7 @@ namespace SimpBot.Services
                 return "Fast forward extended track length.";
             }
             await _player.SeekAsync(_player.Track.Position + TimeSpan.FromSeconds(secs));
-            
+
             return $"Fast forwarded to {(_player.Track.Position.TotalHours >= 1 ? _player.Track.Position.Hours + ":" : "") + _player.Track.Position.Minutes + ":" + _player.Track.Position.Seconds}.";
         }
 
@@ -137,8 +137,8 @@ namespace SimpBot.Services
         {
             if (!endEvent.Reason.ShouldPlayNext())
                 return;
-            
-            if(!endEvent.Player.Queue.TryDequeue(out var item))
+
+            if (!endEvent.Player.Queue.TryDequeue(out var item))
             {
                 await endEvent.Player.TextChannel.SendMessageAsync("Queue empty.");
                 return;
@@ -190,7 +190,7 @@ namespace SimpBot.Services
             if (_player is null)
                 return "Player isn't playing!";
 
-            if(_player.PlayerState == PlayerState.Paused )
+            if (_player.PlayerState == PlayerState.Paused)
             {
                 await _player.ResumeAsync();
                 return "Music resumed!";
@@ -232,7 +232,7 @@ namespace SimpBot.Services
 
         public bool HasMusicPrivilege(SocketCommandContext context)
         {
-            return (Util.isAno(context) || context.Guild.Id != 534100287179194368);
+            return (Util.isAno(context) || true);
         }
     }
 }
