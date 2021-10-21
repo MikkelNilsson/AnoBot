@@ -56,8 +56,6 @@ namespace SimpBot
             _client.Log += Util.Log;
             _services = SetupServices();
 
-            _client.UserLeft += UserLeft;
-
             await _services.GetRequiredService<BotSettingsService>().InitializeAsync();
             await _services.GetRequiredService<MusicService>().InitializeAsync();
             await _services.GetRequiredService<WelcomeMessageService>().InitializeAsync();
@@ -73,6 +71,8 @@ namespace SimpBot
         }
 
 
+
+
         private IServiceProvider SetupServices()
             => new ServiceCollection()
             .AddSingleton(_client)
@@ -86,16 +86,5 @@ namespace SimpBot
             .AddSingleton<WelcomeMessageService>()
             .BuildServiceProvider();
 
-        private Task UserLeft(SocketGuildUser arg)
-        {
-            if (_dataService.GetServerData(arg.Guild.Id).HasLeaveMessage())
-            {
-                var channel =
-                    arg.Guild.GetChannel(_dataService.GetServerData(arg.Guild.Id).getLeaveChannel()) as
-                        SocketTextChannel;
-                channel?.SendMessageAsync(arg.Username + (!(arg.Nickname is null) ? " (" + arg.Nickname + ")" : "") + " left the server.");
-            }
-            return Task.CompletedTask;
-        }
     }
 }

@@ -163,19 +163,18 @@ namespace SimpBot.Modules
 
             var data = _dataService.GetServerData(Context.Guild.Id);
 
-            var res = _musicService.Queue(Context.Guild, --page, false);
-            if (res.embed is null)
+            var res = _musicService.Queue(Context.Guild, page, false);
+            if (res.err)
             {
-                if (res.err == "")
-                {
-                    return;
-                }
-                await ReplyAsync(res.err);
+                await ReplyAsync(res.errmsg);
                 return;
             }
 
             var msg = await ReplyAsync(embed: res.embed);
-            data.MusicQueueMessage = msg;
+            await _musicService.AddQueueReactions(msg);
+            data.MusicQueueMessage = (msg, page);
         }
+
+
     }
 }

@@ -9,6 +9,7 @@ using Victoria.Enums;
 using System.Linq;
 using System.Net;
 using Discord.Commands;
+using Microsoft.VisualBasic;
 using Victoria.Responses.Rest;
 using SimpBot.Custom_Classes;
 
@@ -46,6 +47,7 @@ namespace SimpBot.Services
             _client.Ready += ClientReady;
             _lavaNode.OnLog += Log;
             _lavaNode.OnTrackEnded += TrackEnded;
+            _client.ReactionAdded += OnReactionAdded;
             return Task.CompletedTask;
         }
 
@@ -221,16 +223,18 @@ namespace SimpBot.Services
             return "Paused music!";
         }
 
-        public (Embed embed, string err) Queue(IGuild guild, int pageNumber, bool edit)
+        public (Embed embed, string errmsg, bool err, bool isLastPage) Queue(IGuild guild, int pageNumber, bool edit)
         {
             if (!SetPlayer(guild))
-                return (null, "Queue empty");
-
+                return (null, "Queue empty", true, false);
+            
+            --pageNumber;
+            
             int count = _player.Queue.Count();
             int offset = pageNumber * 10;
 
             if (offset >= count)
-                return (null, "Invalid page number");
+                return (null, "Invalid page number", true, false);
 
             var embed = new EmbedBuilder
             {
@@ -246,20 +250,71 @@ namespace SimpBot.Services
                 embed.Description += "**" + (i + 1) + "**: [" + track.Title + "](" + track.Url + ")   " + ((track.Duration.TotalHours >= 1 ? track.Duration.Hours + ":" : "") + track.Duration.Minutes.ToString("D2") + ":" + track.Duration.Seconds.ToString("D2")) + "\n";
             }
 
+            bool isLastPage = (offset + 10) >= count;
+            
+            var resEmbed = embed.WithColor(new Color(0x000000))
+                .WithFooter("page: " + (pageNumber + 1) + "/" + Math.Ceiling(count / 10.0))
+                .Build();
+            
             if (edit)
             {
                 SetData(guild);
-                _data.MusicQueueMessage.ModifyAsync(msg => msg.Embed = embed.WithColor(Color.Blue).Build());
-                return (null, "");
+                _data.MusicQueueMessage.msg.ModifyAsync(msg => msg.Embed = resEmbed);
+                return (null, "", false, isLastPage);
             }
             else
             {
-                return (embed.WithColor(new Color(0x000000)).WithFooter("page: " + (pageNumber + 1) + "/" + Math.Ceiling(count / 10.0)).Build(), "");
+                return (resEmbed, "", false, isLastPage);
+            }
+        }
+        
+        public async Task AddQueueReactions(IMessage msg)
+        {
+            await msg.AddReactionAsync(new Emoji("\U000023EE"));
+            await msg.AddReactionAsync(new Emoji("\U000025C0"));
+            await msg.AddReactionAsync(new Emoji("\U000025B6"));
+            await msg.AddReactionAsync(new Emoji("\U000023ED"));
+        }
+        
+        private async Task OnReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
+        {
+            var chan = arg2 as IGuildChannel;
+            if (chan is null) return;
+            SetData(chan.Guild);
+            
+            if (arg1.HasValue && !Util.isMe(arg3.User.Value) && arg1.Value.Id == _data.MusicQueueMessage.msg.Id)
+            {
+                var pageNumber = -1;
+                if (arg3.Emote.Equals(new Emoji("\U000023EE")))
+                {
+                    pageNumber = 1;
+                }
+                else if (arg3.Emote.Equals(new Emoji("\U000025C0")))
+                {
+                    pageNumber = Math.Max(_data.MusicQueueMessage.page - 1, 1);
+                }
+                else if (arg3.Emote.Equals(new Emoji("\U000025B6")))
+                {
+                    pageNumber = Math.Min(_data.MusicQueueMessage.page + 1, Convert.ToInt32(Math.Ceiling(_player.Queue.Count / 10.0)));
+                }
+                else if (arg3.Emote.Equals(new Emoji("\U000023ED")))
+                {
+                    SetPlayer(chan.Guild);
+                    pageNumber = Convert.ToInt32(Math.Ceiling(_player.Queue.Count / 10.0));
+                }
+
+                if (pageNumber == -1) return;
+                
+                var (_, _,err,isLastPage) = Queue(chan.Guild, pageNumber, true);
+
+                if (err) return;
+
+                await _data.MusicQueueMessage.msg.RemoveReactionAsync(arg3.Emote, arg3.User.Value);
             }
         }
 
 
-        private Task Log(LogMessage logMessage)
+        private static Task Log(LogMessage logMessage)
         {
             Util.Log($"LAVA: {logMessage.Message}");
 

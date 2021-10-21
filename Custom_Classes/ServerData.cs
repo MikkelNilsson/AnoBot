@@ -11,7 +11,7 @@ namespace SimpBot.Custom_Classes
         private ulong welcomeChannel;
         private string welcomeMessage;
         private ulong leaveChannel;
-        public IUserMessage MusicQueueMessage { get; set; }
+        public (IUserMessage msg, int page) MusicQueueMessage { get; set; }
         public IUserMessage NowPlayingMessage { get; set; }
 
         public ServerData()

@@ -12,17 +12,17 @@ namespace SimpBot
         {
             _dataService = dataService;
             _client = client;
+            _client.UserLeft += SendLeaveMessage;
         }
 
-        private async Task SendLeaveMessage(SocketGuildUser arg)
+        private Task SendLeaveMessage(SocketGuildUser arg)
         {
-            if (_dataService.GetServerData(arg.Guild.Id).HasLeaveMessage())
-            {
-                var channel =
-                    arg.Guild.GetChannel(_dataService.GetServerData(arg.Guild.Id).getLeaveChannel()) as
-                        SocketTextChannel;
-                await channel.SendMessageAsync(arg.Username + (!(arg.Nickname is null) ? " (" + arg.Nickname + ")" : "") + " left the server.");
-            }
+            if (!_dataService.GetServerData(arg.Guild.Id).HasLeaveMessage()) return Task.CompletedTask;
+            var channel =
+                arg.Guild.GetChannel(_dataService.GetServerData(arg.Guild.Id).getLeaveChannel()) as
+                    SocketTextChannel;
+            channel?.SendMessageAsync(arg.Username + (!(arg.Nickname is null) ? " (" + arg.Nickname + ")" : "") + " left the server.");
+            return Task.CompletedTask;
         }
 
         public string SetLeaveMessage(SocketGuild guild, string command)
