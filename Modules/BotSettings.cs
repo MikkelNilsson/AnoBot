@@ -14,22 +14,32 @@ namespace SimpBot.Modules
         }
 
         [Command("SetPrefix")]
-        [RequireUserPermission(Discord.GuildPermission.Administrator)]
+        [Alias("SP")]
+        [RequireUserPermission(Discord.GuildPermission.ManageGuild)]
         public async Task Setprefix(string remainder)
         {
             _settingsService.SetPrefix(Context.Guild, remainder.Trim());
             await ReplyAsync($"Prefix set to \'{remainder.Trim()}\'!");
         }
 
-        [Command("Help")]
+        [Command("Help", true)]
+        [Alias("H")]
         [RequireBotPermission(Discord.GuildPermission.ManageMessages)]
         public async Task Help()
         {
-            await _settingsService.HelpAsync(Context);
+            await _settingsService.HelpAsync(Context,"");
+        }
+        [Command("Help")]
+        [Alias("H")]
+        [RequireBotPermission(Discord.GuildPermission.ManageMessages)]
+        public async Task Help(string remainder)
+        {
+            await _settingsService.HelpAsync(Context, remainder);
         }
 
         [Command("SetDefaultRole")]
-        [RequireUserPermission(Discord.GuildPermission.Administrator)]
+        [Alias("SDR")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
         [RequireBotPermission(GuildPermission.ManageMessages)]
         [RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task SetDefaultRole(string remainder)
@@ -38,8 +48,9 @@ namespace SimpBot.Modules
             await Context.Message.DeleteAsync();
         }
 
-        [Command("RemoveDefaultRole")]
-        [RequireUserPermission(GuildPermission.Administrator)]
+        [Command("RemoveDefaultRole", true)]
+        [Alias("RDR")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
         public async Task RemoveDefaultRole()
         {
             await ReplyAsync(_settingsService.RemoveDefaultRole(Context.Guild));

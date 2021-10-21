@@ -405,4 +405,13 @@ Desktop.ini
 **/.idea/
 **/.vs
 **/secret/
+
+
+bin/
 obj/
+
+# Shell scripts
+*.bat
+
+# Data
+[Dd]ata/
