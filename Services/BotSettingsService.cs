@@ -68,7 +68,7 @@ namespace SimpBot
                 res.AddField("**__Bot Settings:__**",
                     "`SetPrefix <prefix>` or use `SP <prefix>`: Use to set prefix for commands.");
                 res.AddField("**__Default Role:__**",
-                    "`SetDefaultRole <@role>` or use `SDR <@role>`: Use to set default role. Role will be added to every user joining the server. *(Does not affect current members)*\n" +
+                    "`SetDefaultRole <@role>` or use `SDR <@role>`: Use to set the role, which will be added to every user joining the server. *(Does not affect current members)*\n" +
                     "`RemoveDefaultRole` or use `RDR`: Use to remove the default role function.");
 
                 res.AddField("**__Welcome Message:__**",
@@ -81,10 +81,19 @@ namespace SimpBot
                     "`RemoveLeaveMessage` or use `RLM`: Disables the leave message function.");
             }
 
+            res.AddField("**__Music:__**",
+                "`Play <query>`: Query being a youtube link or a search phrase.\n" +
+                "`Queue`: Shows the queue.\n" +
+                "`Skip`: Skips the current song.\n" +
+                "`Leave`: The bot leaves the voice channel and clears the queue.\n" +
+                "`Volume <volume level>`: Sets the volume (Level between 0 and 150).\n" +
+                "`Shuffle`: Shuffles the current queue.\n" +
+                "`FastForward <amount in seconds>`: Fast forwards the track a given amount.\n");
+
             var embed = res.WithAuthor(context.Client.CurrentUser)
                 .WithFooter(
-                    (context.User.Id == 614083078100484106 ? "❤💕Thanks for using WUBot, Thomas!💕❤" : "Thanks for using WUBot!"))
-                .WithCurrentTimestamp()
+                    (context.User.Id == 614083078100484106 ? "❤💕Thank you for using WUBot, Thomas!💕❤" : "Thank you for using WUBot!"))
+                .WithUrl("https://anomark22.github.io/")
                 .Build();
             await dmChannel.SendMessageAsync(embed: embed);
         }
