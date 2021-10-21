@@ -10,10 +10,11 @@ using System.Linq;
 using System.Net;
 using Discord.Commands;
 using Victoria.Responses.Rest;
+using SimpBot.Custom_Classes;
 
 namespace SimpBot.Services
 {
-    
+
     //Done TODO Create fast forward: !ff 15 -> skip 15 secs of the song
     //TODO move functionality: !move 15 1 -> moves song in position 15 to position 1
     //TODO queue functionality: !queue -> pretty print queue somehow.
@@ -30,11 +31,14 @@ namespace SimpBot.Services
         private readonly LavaNode _lavaNode;
         private readonly DiscordSocketClient _client;
         private LavaPlayer _player;
-        public MusicService(LavaConfig lavaConfig, LavaNode lavaNode, DiscordSocketClient client)
+        private ServerData _data;
+        private DataService _dataService;
+        public MusicService(LavaConfig lavaConfig, LavaNode lavaNode, DiscordSocketClient client, DataService dataService)
         {
             _lavaConfig = lavaConfig;
             _lavaNode = lavaNode;
             _client = client;
+            _dataService = dataService;
         }
 
         public Task InitializeAsync()
@@ -49,10 +53,19 @@ namespace SimpBot.Services
         public async Task ConnectAsync(SocketVoiceChannel voiceChannel, ITextChannel txtChannel)
             => await _lavaNode.JoinAsync(voiceChannel, txtChannel);
 
-        private void SetPlayer(IGuild guild)
+        private bool SetPlayer(IGuild guild)
         {
-            _player = _lavaNode.GetPlayer(guild);
-            
+            if (NodeHasPlayer(guild))
+            {
+                _player = _lavaNode.GetPlayer(guild);
+                return true;
+            }
+            return false;
+        }
+
+        private void SetData(IGuild guild)
+        {
+            _data = _dataService.GetServerData(guild.Id);
         }
 
         public async Task<string> PlayAsync(string query, IGuild guild)
@@ -68,7 +81,7 @@ namespace SimpBot.Services
             {
                 Util.Log($"MUSIC: Youtube search: {query}");
                 results = await _lavaNode.SearchYouTubeAsync(query);
-                
+
             }
 
             switch (results.LoadStatus)
@@ -81,7 +94,7 @@ namespace SimpBot.Services
                 case LoadStatus.SearchResult:
                 case LoadStatus.TrackLoaded:
                     var track = results.Tracks.FirstOrDefault();
-                    if(_player.PlayerState == PlayerState.Playing)
+                    if (_player.PlayerState == PlayerState.Playing)
                     {
                         _player.Queue.Enqueue(track);
                         return $"*{track.Title}* has been added to the queue.";
@@ -119,14 +132,14 @@ namespace SimpBot.Services
                 return "Fast forward extended track length.";
             }
             await _player.SeekAsync(_player.Track.Position + TimeSpan.FromSeconds(secs));
-            
+
             return $"Fast forwarded to {(_player.Track.Position.TotalHours >= 1 ? _player.Track.Position.Hours + ":" : "") + _player.Track.Position.Minutes + ":" + _player.Track.Position.Seconds}.";
         }
 
         public string Shuffle(SocketGuild guild)
         {
-            SetPlayer(guild);
-            if (_player.Queue.Count <= 0)
+
+            if (SetPlayer(guild) || _player.Queue.Count <= 0)
             {
                 return "Queue empty, nothing to shuffle.";
             }
@@ -144,8 +157,8 @@ namespace SimpBot.Services
         {
             if (!endEvent.Reason.ShouldPlayNext())
                 return;
-            
-            if(!endEvent.Player.Queue.TryDequeue(out var item))
+
+            if (!endEvent.Player.Queue.TryDequeue(out var item))
             {
                 await endEvent.Player.TextChannel.SendMessageAsync("Queue empty.");
                 return;
@@ -168,9 +181,8 @@ namespace SimpBot.Services
 
         public async Task<String> SkipAsync(IGuild guild)
         {
-            SetPlayer(guild);
 
-            if (_player is null || _player.Queue.Count is 0)
+            if (SetPlayer(guild) || _player.Queue.Count is 0)
                 return "Nothing in queue!";
 
             LavaTrack oldTrack = _player.Track;
@@ -180,7 +192,8 @@ namespace SimpBot.Services
 
         public async Task<String> SetVolumeAsync(IGuild guild, ushort vol)
         {
-            SetPlayer(guild);
+            if (!SetPlayer(guild))
+                return "No music is playing, why u wanna change volume?!?";
 
             if (vol > 150 || vol < 2)
                 return "Invalid volume level!";
@@ -192,12 +205,11 @@ namespace SimpBot.Services
 
         public async Task<string> PauseOrResumeAsync(IGuild guild, string command)
         {
-            SetPlayer(guild);
 
-            if (_player is null)
-                return "Player isn't playing!";
+            if (!SetPlayer(guild))
+                return "I'm not even playing!";
 
-            if(_player.PlayerState == PlayerState.Paused )
+            if (_player.PlayerState == PlayerState.Paused)
             {
                 await _player.ResumeAsync();
                 return "Music resumed!";
@@ -209,10 +221,41 @@ namespace SimpBot.Services
             return "Paused music!";
         }
 
-        public string Queue()
+        public (Embed embed, string err) Queue(IGuild guild, int pageNumber, bool edit)
         {
-            //TODO create queue things
-            return "";
+            if (!SetPlayer(guild))
+                return (null, "Queue empty");
+
+            int count = _player.Queue.Count();
+            int offset = pageNumber * 10;
+
+            if (offset >= count)
+                return (null, "Invalid page number");
+
+            var embed = new EmbedBuilder
+            {
+                Title = "Queue:",
+                Description = ""
+            };
+
+            embed.Description += "**Now playing:** [*" + _player.Track.Title + "*](" + _player.Track.Url + ")\n\n";
+
+            for (int i = offset; (i < (offset + 10) && i < count); i++)
+            {
+                var track = _player.Queue.ElementAt(i);
+                embed.Description += "**" + (i + 1) + "**: [" + track.Title + "](" + track.Url + ")   " + ((track.Duration.TotalHours >= 1 ? track.Duration.Hours + ":" : "") + track.Duration.Minutes.ToString("D2") + ":" + track.Duration.Seconds.ToString("D2")) + "\n";
+            }
+
+            if (edit)
+            {
+                SetData(guild);
+                _data.MusicQueueMessage.ModifyAsync(msg => msg.Embed = embed.WithColor(Color.Blue).Build());
+                return (null, "");
+            }
+            else
+            {
+                return (embed.WithColor(new Color(0x000000)).WithFooter("page: " + (pageNumber + 1) + "/" + Math.Ceiling(count / 10.0)).Build(), "");
+            }
         }
 
 

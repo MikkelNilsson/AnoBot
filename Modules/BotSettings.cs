@@ -22,12 +22,12 @@ namespace SimpBot.Modules
             await ReplyAsync($"Prefix set to \'{remainder.Trim()}\'!");
         }
 
-        [Command("Help", true)]
+        [Command("Help")]
         [Alias("H")]
         [RequireBotPermission(Discord.GuildPermission.ManageMessages)]
-        public async Task Help()
+        public async Task Help(string remainder)
         {
-            await _settingsService.HelpAsync(Context);
+            await _settingsService.HelpAsync(Context, remainder);
         }
 
         [Command("SetDefaultRole")]

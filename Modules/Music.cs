@@ -12,7 +12,7 @@ namespace SimpBot.Modules
     {
         private MusicService _musicService;
         private DataService _dataService;
-        
+
         public Music(MusicService musicService, DataService dataService)
         {
             _musicService = musicService;
@@ -63,7 +63,7 @@ namespace SimpBot.Modules
 
         [Command("FastForward")]
         [Alias("FF")]
-        public async Task FastForward([Remainder]string secs)
+        public async Task FastForward([Remainder] string secs)
         {
             if (!_musicService.NodeHasPlayer(Context.Guild))
             {
@@ -91,7 +91,7 @@ namespace SimpBot.Modules
 
         [Command("Play")]
         [Alias("P")]
-        public async Task Play([Remainder]string query)
+        public async Task Play([Remainder] string query)
         {
             if (!_musicService.NodeHasPlayer(Context.Guild))
                 await Join();
@@ -139,12 +139,43 @@ namespace SimpBot.Modules
             await ReplyAsync(_musicService.Shuffle(Context.Guild));
         }
 
-        [Command("Queue")]
-        public async Task Queue()
+        [Command("Queue", true)]
+        public async Task Queue(string remainder)
         {
-            var data = _dataService.GetServerData(Context.Guild.Id);
-            data.MusicQueueMessage = await ReplyAsync(_musicService.Queue());
+            var r = remainder.Trim();
+            if (Int32.TryParse(r, out int page))
+            {
+                await QueueLogic(page);
+            }
+            else
+            {
+                await ReplyAsync("Page number is not a valid number");
+            }
+        }
+        [Command("Queue")]
+        public async Task QueueNoArg()
+        {
+            await QueueLogic(1);
+        }
 
+        private async Task QueueLogic(int page)
+        {
+
+            var data = _dataService.GetServerData(Context.Guild.Id);
+
+            var res = _musicService.Queue(Context.Guild, --page, false);
+            if (res.embed is null)
+            {
+                if (res.err == "")
+                {
+                    return;
+                }
+                await ReplyAsync(res.err);
+                return;
+            }
+
+            var msg = await ReplyAsync(embed: res.embed);
+            data.MusicQueueMessage = msg;
         }
     }
 }

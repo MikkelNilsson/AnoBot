@@ -14,11 +14,6 @@ namespace SimpBot
             _client = client;
         }
 
-        public async Task InitializeAsync()
-        {
-            _client.UserJoined += SendLeaveMessage;
-        }
-
         private async Task SendLeaveMessage(SocketGuildUser arg)
         {
             if (_dataService.GetServerData(arg.Guild.Id).HasLeaveMessage())
@@ -40,11 +35,11 @@ namespace SimpBot
                 {
                     _dataService.GetServerData(guild.Id).ActivateLeaveMessage(channelId);
                     _dataService.SaveServerData(guild.Id);
-                    
+
                     return "Leave message activated on channel <#" + channelId + ">!";
                 }
-                
-                return "<#"+ channelId + "> is not a valid text channel.";
+
+                return "<#" + channelId + "> is not a valid text channel.";
             }
             return "Leave message setup was unsuccessful, use !help for info on command.";
         }
@@ -53,7 +48,7 @@ namespace SimpBot
         {
             if (!_dataService.GetServerData(guild.Id).HasLeaveMessage())
                 return "Leave message is not active.";
-            
+
             _dataService.GetServerData(guild.Id).DisableLeaveMessage();
             _dataService.SaveServerData(guild.Id);
             return "Leave message was removed.";
