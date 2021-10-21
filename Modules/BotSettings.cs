@@ -22,6 +22,13 @@ namespace SimpBot.Modules
             await ReplyAsync($"Prefix set to \'{remainder.Trim()}\'!");
         }
 
+        [Command("Help", true)]
+        [Alias("H")]
+        [RequireBotPermission(Discord.GuildPermission.ManageMessages)]
+        public async Task Help()
+        {
+            await _settingsService.HelpAsync(Context,"");
+        }
         [Command("Help")]
         [Alias("H")]
         [RequireBotPermission(Discord.GuildPermission.ManageMessages)]
