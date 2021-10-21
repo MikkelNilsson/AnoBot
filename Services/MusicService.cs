@@ -255,6 +255,7 @@ namespace SimpBot.Services
             {
                 SetData(guild);
                 _data.MusicQueueMessage.msg.ModifyAsync(msg => msg.Embed = resEmbed);
+                _data.MusicQueueMessage = (_data.MusicQueueMessage.msg, pageNumber + 1);
                 return (null, "", false, isLastPage);
             }
             else
