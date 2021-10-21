@@ -12,22 +12,17 @@ namespace SimpBot
         {
             _dataService = dataService;
             _client = client;
+            _client.UserLeft += SendLeaveMessage;
         }
 
-        public async Task InitializeAsync()
+        private Task SendLeaveMessage(SocketGuildUser arg)
         {
-            _client.UserJoined += SendLeaveMessage;
-        }
-
-        private async Task SendLeaveMessage(SocketGuildUser arg)
-        {
-            if (_dataService.GetServerData(arg.Guild.Id).HasLeaveMessage())
-            {
-                var channel =
-                    arg.Guild.GetChannel(_dataService.GetServerData(arg.Guild.Id).getLeaveChannel()) as
-                        SocketTextChannel;
-                await channel.SendMessageAsync(arg.Username + (!(arg.Nickname is null) ? " (" + arg.Nickname + ")" : "") + " left the server.");
-            }
+            if (!_dataService.GetServerData(arg.Guild.Id).HasLeaveMessage()) return Task.CompletedTask;
+            var channel =
+                arg.Guild.GetChannel(_dataService.GetServerData(arg.Guild.Id).getLeaveChannel()) as
+                    SocketTextChannel;
+            channel?.SendMessageAsync(arg.Username + (!(arg.Nickname is null) ? " (" + arg.Nickname + ")" : "") + " left the server.");
+            return Task.CompletedTask;
         }
 
         public string SetLeaveMessage(SocketGuild guild, string command)
@@ -40,11 +35,11 @@ namespace SimpBot
                 {
                     _dataService.GetServerData(guild.Id).ActivateLeaveMessage(channelId);
                     _dataService.SaveServerData(guild.Id);
-                    
+
                     return "Leave message activated on channel <#" + channelId + ">!";
                 }
-                
-                return "<#"+ channelId + "> is not a valid text channel.";
+
+                return "<#" + channelId + "> is not a valid text channel.";
             }
             return "Leave message setup was unsuccessful, use !help for info on command.";
         }
@@ -53,7 +48,7 @@ namespace SimpBot
         {
             if (!_dataService.GetServerData(guild.Id).HasLeaveMessage())
                 return "Leave message is not active.";
-            
+
             _dataService.GetServerData(guild.Id).DisableLeaveMessage();
             _dataService.SaveServerData(guild.Id);
             return "Leave message was removed.";

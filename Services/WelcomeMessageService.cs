@@ -17,7 +17,7 @@ namespace SimpBot
             _settings = settings;
         }
         
-        public async Task InitializeAsync()
+        public void Initialize()
         {
             _client.UserJoined += PlayWelcomeMessage;
         }

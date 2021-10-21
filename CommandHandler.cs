@@ -38,7 +38,7 @@ namespace SimpBot
                 var argPos = 0;
                 if (msg.Author.IsBot) return;
 
-                // Util.Log(msg.Author.ToString().Substring(0, msg.Author.ToString().Length - 5) + ": " + msg.Content);
+                //Util.Log(msg.Author.ToString().Substring(0, msg.Author.ToString().Length - 5) + ": " + msg.Content);
 
                 SocketUserMessage userMsg = msg as SocketUserMessage;
                 if (userMsg is null) return;
@@ -51,7 +51,10 @@ namespace SimpBot
                 if (!userMsg.HasStringPrefix(_settingsService.GetPrefix(context.Guild), ref argPos))
                 {
                     if (userMsg.HasStringPrefix("!help", ref argPos))
-                        await _settingsService.HelpAsync(context);
+                    {
+                        string arg = userMsg.Content.Substring(5);
+                        await _settingsService.HelpAsync(context, arg);
+                    }
                     return;
                 }
 

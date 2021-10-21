@@ -1,15 +1,14 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using System;
-using System.Collections;
 using System.Threading.Tasks;
 using Victoria;
 using Victoria.EventArgs;
 using Victoria.Enums;
 using System.Linq;
-using System.Net;
 using Discord.Commands;
 using Victoria.Responses.Rest;
+using SimpBot.Custom_Classes;
 
 namespace SimpBot.Services
 {
@@ -21,17 +20,23 @@ namespace SimpBot.Services
     //Done TODO queue a playlist: !playlist "link" -> queue every song in playlist (up to 25 songs)
     //TODO Soundcloud play with specific soundcloud link or !soundcloud
     //TODO Automatic disconnect after 5 mins with nobody in the channel
+    //TODO spotify playlist retrieve songtitles and stuff to play from yt
+    //TODO setting: clear queue on leave
+    //TODO clear functionality -> clear queue.
     public class MusicService
     {
         private readonly LavaConfig _lavaConfig;
         private readonly LavaNode _lavaNode;
         private readonly DiscordSocketClient _client;
         private LavaPlayer _player;
-        public MusicService(LavaConfig lavaConfig, LavaNode lavaNode, DiscordSocketClient client)
+        private ServerData _data;
+        private readonly DataService _dataService;
+        public MusicService(LavaConfig lavaConfig, LavaNode lavaNode, DiscordSocketClient client, DataService dataService)
         {
             _lavaConfig = lavaConfig;
             _lavaNode = lavaNode;
             _client = client;
+            _dataService = dataService;
         }
 
         public Task InitializeAsync()
@@ -39,6 +44,7 @@ namespace SimpBot.Services
             _client.Ready += ClientReady;
             _lavaNode.OnLog += Log;
             _lavaNode.OnTrackEnded += TrackEnded;
+            _client.ReactionAdded += OnReactionAdded;
             return Task.CompletedTask;
         }
 
@@ -46,10 +52,16 @@ namespace SimpBot.Services
         public async Task ConnectAsync(SocketVoiceChannel voiceChannel, ITextChannel txtChannel)
             => await _lavaNode.JoinAsync(voiceChannel, txtChannel);
 
-        private void SetPlayer(IGuild guild)
+        private bool SetPlayer(IGuild guild)
         {
+            if (!NodeHasPlayer(guild)) return false;
             _player = _lavaNode.GetPlayer(guild);
+            return true;
+        }
 
+        private void SetData(IGuild guild)
+        {
+            _data = _dataService.GetServerData(guild.Id);
         }
 
         public async Task<string> PlayAsync(string query, IGuild guild)
@@ -78,6 +90,8 @@ namespace SimpBot.Services
                 case LoadStatus.SearchResult:
                 case LoadStatus.TrackLoaded:
                     var track = results.Tracks.FirstOrDefault();
+                    if (track is null) return "Load Failed!";
+                    
                     if (_player.PlayerState == PlayerState.Playing)
                     {
                         _player.Queue.Enqueue(track);
@@ -89,7 +103,6 @@ namespace SimpBot.Services
                         return $"**Now playing:** *{track.Title}*\n{track.Url}";
                     }
                 case LoadStatus.PlaylistLoaded:
-                    //TODO fix playlists where it won't load some playlists... no idea why...
                     foreach (var t in results.Tracks)
                     {
                         if (_player.PlayerState != PlayerState.Playing)
@@ -120,11 +133,15 @@ namespace SimpBot.Services
             return $"Fast forwarded to {(_player.Track.Position.TotalHours >= 1 ? _player.Track.Position.Hours + ":" : "") + _player.Track.Position.Minutes + ":" + _player.Track.Position.Seconds}.";
         }
 
-        public async Task<string> Shuffle(SocketGuild guild)
+        public string Shuffle(SocketGuild guild)
         {
-            SetPlayer(guild);
+
+            if (SetPlayer(guild) || _player.Queue.Count <= 0)
+            {
+                return "Queue empty, nothing to shuffle.";
+            }
             _player.Queue.Shuffle();
-            return "Queue Shuffled";
+            return "Queue Shuffled.";
         }
 
         public async Task LeaveAsync(SocketVoiceChannel voiceChannel)
@@ -161,9 +178,8 @@ namespace SimpBot.Services
 
         public async Task<String> SkipAsync(IGuild guild)
         {
-            SetPlayer(guild);
 
-            if (_player is null || _player.Queue.Count is 0)
+            if (SetPlayer(guild) || _player.Queue.Count is 0)
                 return "Nothing in queue!";
 
             LavaTrack oldTrack = _player.Track;
@@ -173,7 +189,8 @@ namespace SimpBot.Services
 
         public async Task<String> SetVolumeAsync(IGuild guild, ushort vol)
         {
-            SetPlayer(guild);
+            if (!SetPlayer(guild))
+                return "No music is playing, why u wanna change volume?!?";
 
             if (vol > 150 || vol < 2)
                 return "Invalid volume level!";
@@ -185,10 +202,9 @@ namespace SimpBot.Services
 
         public async Task<string> PauseOrResumeAsync(IGuild guild, string command)
         {
-            SetPlayer(guild);
 
-            if (_player is null)
-                return "Player isn't playing!";
+            if (!SetPlayer(guild))
+                return "I'm not even playing!";
 
             if (_player.PlayerState == PlayerState.Paused)
             {
@@ -202,14 +218,98 @@ namespace SimpBot.Services
             return "Paused music!";
         }
 
-        public string Queue()
+        public (Embed embed, string errmsg, bool err, bool isLastPage) Queue(IGuild guild, int pageNumber, bool edit)
         {
-            //TODO create queue things
-            return "";
+            if (!SetPlayer(guild))
+                return (null, "Queue empty", true, false);
+            
+            --pageNumber;
+            
+            int count = _player.Queue.Count();
+            int offset = pageNumber * 10;
+
+            if (offset >= count)
+                return (null, "Invalid page number", true, false);
+
+            var embed = new EmbedBuilder
+            {
+                Title = "Queue:",
+                Description = ""
+            };
+
+            embed.Description += "**Now playing:** [*" + _player.Track.Title + "*](" + _player.Track.Url + ")\n\n";
+
+            for (int i = offset; (i < (offset + 10) && i < count); i++)
+            {
+                var track = _player.Queue.ElementAt(i);
+                embed.Description += "**" + (i + 1) + "**: [" + track.Title + "](" + track.Url + ")   " + ((track.Duration.TotalHours >= 1 ? track.Duration.Hours + ":" : "") + track.Duration.Minutes.ToString("D2") + ":" + track.Duration.Seconds.ToString("D2")) + "\n";
+            }
+
+            bool isLastPage = (offset + 10) >= count;
+            
+            var resEmbed = embed.WithColor(new Color(0x000000))
+                .WithFooter("page: " + (pageNumber + 1) + "/" + Math.Ceiling(count / 10.0))
+                .Build();
+            
+            if (edit)
+            {
+                SetData(guild);
+                _data.MusicQueueMessage.msg.ModifyAsync(msg => msg.Embed = resEmbed);
+                return (null, "", false, isLastPage);
+            }
+            else
+            {
+                return (resEmbed, "", false, isLastPage);
+            }
+        }
+        
+        public async Task AddQueueReactions(IMessage msg)
+        {
+            await msg.AddReactionAsync(new Emoji("\U000023EE"));
+            await msg.AddReactionAsync(new Emoji("\U000025C0"));
+            await msg.AddReactionAsync(new Emoji("\U000025B6"));
+            await msg.AddReactionAsync(new Emoji("\U000023ED"));
+        }
+        
+        private async Task OnReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
+        {
+            var chan = arg2 as IGuildChannel;
+            if (chan is null) return;
+            SetData(chan.Guild);
+            
+            if (arg1.HasValue && !Util.isMe(arg3.User.Value) && arg1.Value.Id == _data.MusicQueueMessage.msg.Id)
+            {
+                var pageNumber = -1;
+                if (arg3.Emote.Equals(new Emoji("\U000023EE")))
+                {
+                    pageNumber = 1;
+                }
+                else if (arg3.Emote.Equals(new Emoji("\U000025C0")))
+                {
+                    pageNumber = Math.Max(_data.MusicQueueMessage.page - 1, 1);
+                }
+                else if (arg3.Emote.Equals(new Emoji("\U000025B6")))
+                {
+                    pageNumber = Math.Min(_data.MusicQueueMessage.page + 1, Convert.ToInt32(Math.Ceiling(_player.Queue.Count / 10.0)));
+                }
+                else if (arg3.Emote.Equals(new Emoji("\U000023ED")))
+                {
+                    SetPlayer(chan.Guild);
+                    pageNumber = Convert.ToInt32(Math.Ceiling(_player.Queue.Count / 10.0));
+                }
+
+                if (pageNumber == -1) return;
+                
+                var (_, _,err, _) = Queue(chan.Guild, pageNumber, true);
+
+                if (err) return;
+
+                await _data.MusicQueueMessage.msg.RemoveReactionAsync(arg3.Emote, arg3.User.Value);
+            }
         }
 
 
-        private Task Log(LogMessage logMessage)
+        private static Task Log(LogMessage logMessage)
         {
             Util.Log($"LAVA: {logMessage.Message}");
 
@@ -230,9 +330,9 @@ namespace SimpBot.Services
             return _lavaNode.HasPlayer(guild);
         }
 
-        public bool HasMusicPrivilege(SocketCommandContext context)
-        {
-            return (Util.isAno(context) || true);
-        }
+        // public static bool HasMusicPrivilege(SocketCommandContext context)
+        // {
+        //     return (Util.isAno(context) || true);
+        // }
     }
 }

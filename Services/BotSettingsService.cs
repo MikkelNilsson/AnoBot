@@ -17,9 +17,9 @@ namespace SimpBot
             _client = client;
         }
 
-        public async Task InitializeAsync()
+        public void Initialize()
         {
-                _client.UserJoined += AddDefaultRole;
+            _client.UserJoined += AddDefaultRole;
         }
 
         private async Task AddDefaultRole(SocketGuildUser usr)
@@ -41,15 +41,16 @@ namespace SimpBot
             _dataService.SaveServerData(guild.Id);
             return $"Prefix set to {prefix}";
         }
-        
+
         public string GetPrefix(IGuild guild)
         {
             return _dataService.GetServerData(guild.Id).GetPrefix();
         }
-        
+
         //--- Help ---
-        public async Task HelpAsync(SocketCommandContext context)
+        public async Task HelpAsync(SocketCommandContext context, string argument)
         {
+            Util.Log(argument.Trim());
             await context.Message.DeleteAsync();
             var dmChannel = context.User.GetOrCreateDMChannelAsync().Result;
             IGuildUser gUser = context.User as IGuildUser;
@@ -61,8 +62,9 @@ namespace SimpBot
                     $"To use commands on **{context.Guild.Name}**, use \'**{GetPrefix(context.Guild)}**\' in front of one of the following commands:",
                 Color = Color.Blue
             };
-            
-            if (gUser.GuildPermissions.Has(GuildPermission.ManageGuild) || Util.isAno(context)) {
+
+            if (gUser.GuildPermissions.Has(GuildPermission.ManageGuild) || Util.isAno(context))
+            {
                 res.AddField("**__Bot Settings:__**",
                     "`SetPrefix <prefix>` or use `SP <prefix>`: Use to set prefix for commands.");
                 res.AddField("**__Default Role:__**",
@@ -84,7 +86,7 @@ namespace SimpBot
                     (context.User.Id == 614083078100484106 ? "❤💕Thanks for using WUBot, Thomas!💕❤" : "Thanks for using WUBot!"))
                 .WithCurrentTimestamp()
                 .Build();
-            await dmChannel.SendMessageAsync(embed:embed);
+            await dmChannel.SendMessageAsync(embed: embed);
         }
 
         //--- Default Role ---
@@ -94,7 +96,7 @@ namespace SimpBot
                 return guild.GetRole(_dataService.GetServerData(guild.Id).GetDefaultRole());
             else return guild.EveryoneRole;
         }
-        
+
         public string SetDefaultRole(IGuild guild, string command)
         {
             if (!command.StartsWith("<@&"))
