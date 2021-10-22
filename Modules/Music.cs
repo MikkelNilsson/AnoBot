@@ -67,7 +67,7 @@ namespace SimpBot.Modules
         {
             if (!_musicService.NodeHasPlayer(Context.Guild))
             {
-                await ReplyAsync("Bot is not connected to a voice channel.");dw
+                await ReplyAsync("Bot is not connected to a voice channel.");
                 return;
             }
 
