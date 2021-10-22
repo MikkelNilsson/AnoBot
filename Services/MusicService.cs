@@ -1,11 +1,13 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Victoria;
 using Victoria.EventArgs;
 using Victoria.Enums;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Discord.Commands;
 using Victoria.Responses.Rest;
 using SimpBot.Custom_Classes;
@@ -276,10 +278,11 @@ namespace SimpBot.Services
         
         public async Task AddQueueReactions(IMessage msg)
         {
-            await msg.AddReactionAsync(new Emoji("\U000023EE"));
-            await msg.AddReactionAsync(new Emoji("\U000025C0"));
-            await msg.AddReactionAsync(new Emoji("\U000025B6"));
-            await msg.AddReactionAsync(new Emoji("\U000023ED"));
+            var t1 = msg.AddReactionAsync(new Emoji("\U000023EE"));
+            var t2 = msg.AddReactionAsync(new Emoji("\U000025C0"));
+            var t3 = msg.AddReactionAsync(new Emoji("\U000025B6"));
+            var t4 = msg.AddReactionAsync(new Emoji("\U000023ED"));
+            await Task.WhenAll(new List<Task>() {t1, t2, t3, t4});
         }
         
         private async Task OnReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
