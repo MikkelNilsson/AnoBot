@@ -133,7 +133,7 @@ namespace SimpBot.Services
             }
             await _player.SeekAsync(_player.Track.Position + TimeSpan.FromSeconds(secs));
 
-            return $"Fast forwarded to {(_player.Track.Position.TotalHours >= 1 ? _player.Track.Position.Hours + ":" : "") + _player.Track.Position.Minutes + ":" + _player.Track.Position.Seconds}.";
+            return $"Fast forwarded to {(_player.Track.Position.TotalHours >= 1 ? _player.Track.Position.Hours + ":" : "") + _player.Track.Position.Minutes.ToString("D2") + ":" + _player.Track.Position.Seconds.ToString("D2")}.";
         }
 
         public string Shuffle(IGuild guild)
@@ -278,11 +278,10 @@ namespace SimpBot.Services
         
         public async Task AddQueueReactions(IMessage msg)
         {
-            var t1 = msg.AddReactionAsync(new Emoji("\U000023EE"));
-            var t2 = msg.AddReactionAsync(new Emoji("\U000025C0"));
-            var t3 = msg.AddReactionAsync(new Emoji("\U000025B6"));
-            var t4 = msg.AddReactionAsync(new Emoji("\U000023ED"));
-            await Task.WhenAll(new List<Task>() {t1, t2, t3, t4});
+            await msg.AddReactionAsync(new Emoji("\U000023EE"));
+            await msg.AddReactionAsync(new Emoji("\U000025C0"));
+            await msg.AddReactionAsync(new Emoji("\U000025B6"));
+            await msg.AddReactionAsync(new Emoji("\U000023ED"));
         }
         
         private async Task OnReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
