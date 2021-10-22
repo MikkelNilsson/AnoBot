@@ -160,8 +160,13 @@ namespace SimpBot.Services
             _lavaNode.GetPlayer(voiceChannel.Guild).Queue.Clear(); //clears queue on leave
             SetData(voiceChannel.Guild);
             _data.MusicQueueMessage = null;
-            await _data.NowPlayingMessage.DeleteAsync();
-            _data.NowPlayingMessage = null;
+            
+            if (_data.NowPlayingMessage != null)
+            {
+                await _data.NowPlayingMessage.DeleteAsync();
+                _data.NowPlayingMessage = null;
+            }
+            
             await _lavaNode.LeaveAsync(voiceChannel);
         }
 
