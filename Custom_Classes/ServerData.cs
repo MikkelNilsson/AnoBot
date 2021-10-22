@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Discord;
 
 namespace SimpBot.Custom_Classes
@@ -11,7 +12,7 @@ namespace SimpBot.Custom_Classes
         private ulong welcomeChannel;
         private string welcomeMessage;
         private ulong leaveChannel;
-        public (IUserMessage msg, int page) MusicQueueMessage { get; set; }
+        public (IUserMessage msg, int page)? MusicQueueMessage { get; set; }
         public IUserMessage NowPlayingMessage { get; set; }
 
         public ServerData()

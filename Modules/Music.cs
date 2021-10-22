@@ -67,15 +67,15 @@ namespace SimpBot.Modules
         {
             if (!_musicService.NodeHasPlayer(Context.Guild))
             {
-                await ReplyAsync("Bot is not connected to a voice channel.");
+                await ReplyAsync("Bot is not connected to a voice channel.");dw
                 return;
             }
 
-            if (Int32.TryParse(secs.Trim(), out int sec))
+            if (Int32.TryParse(secs.Trim(), out var sec))
             {
                 if (sec > 0)
                 {
-                    await ReplyAsync(await _musicService.FastForward(Context, sec));
+                    await ReplyAsync(await _musicService.FastForward(Context.Guild, sec));
                 }
                 else
                 {
@@ -96,7 +96,7 @@ namespace SimpBot.Modules
             if (!_musicService.NodeHasPlayer(Context.Guild))
                 await Join();
             Util.Log($"MUSIC: Trying to play {query}");
-            var result = _musicService.PlayAsync(query, Context.Guild);
+            var result = _musicService.PlayAsync(query, Context);
             await ReplyAsync(result.Result);
         }
 
