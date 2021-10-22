@@ -15,7 +15,7 @@ namespace SimpBot.Services
 
     //Done TODO Create fast forward: !ff 15 -> skip 15 secs of the song
     //TODO move functionality: !move 15 1 -> moves song in position 15 to position 1
-    //TODO queue functionality: !queue -> pretty print queue somehow.
+    //Done TODO queue functionality: !queue -> pretty print queue somehow.
     //TODO BASSBOOST funtionality: !bassboost 2 -> bassboost 2 out of 10
     //Done TODO queue a playlist: !playlist "link" -> queue every song in playlist (up to 25 songs)
     //TODO Soundcloud play with specific soundcloud link or !soundcloud
@@ -122,7 +122,7 @@ namespace SimpBot.Services
 
         public async Task<string> FastForward(SocketCommandContext context, int secs)
         {
-            SetPlayer(context.Guild);
+            if (!SetPlayer(context.Guild)) return "not playing anything man";
             var pos = _player.Track.Position + TimeSpan.FromSeconds(secs);
             if (pos > _player.Track.Duration)
             {
@@ -136,12 +136,20 @@ namespace SimpBot.Services
         public string Shuffle(SocketGuild guild)
         {
 
-            if (SetPlayer(guild) || _player.Queue.Count <= 0)
+            if (!SetPlayer(guild) || _player.Queue.Count <= 0)
             {
-                return "Queue empty, nothing to shuffle.";
+                return "";
             }
             _player.Queue.Shuffle();
             return "Queue Shuffled.";
+        }
+
+        public string Clear(SocketGuild guild)
+        {
+            if (!SetPlayer(guild))
+                return "";
+            _player.Queue.Clear();
+            return "Queue cleared.";
         }
 
         public async Task LeaveAsync(SocketVoiceChannel voiceChannel)
@@ -168,18 +176,16 @@ namespace SimpBot.Services
 
         public async Task StopAsync(IGuild guild)
         {
-            SetPlayer(guild);
-
-            if (_player is null)
+            if (!SetPlayer(guild))
                 return;
 
             await _player.StopAsync();
         }
 
-        public async Task<String> SkipAsync(IGuild guild)
+        public async Task<string> SkipAsync(IGuild guild)
         {
 
-            if (SetPlayer(guild) || _player.Queue.Count is 0)
+            if (!SetPlayer(guild) || _player.Queue.Count is 0)
                 return "Nothing in queue!";
 
             LavaTrack oldTrack = _player.Track;

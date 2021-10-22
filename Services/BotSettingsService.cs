@@ -85,6 +85,7 @@ namespace SimpBot
                 "`Play <query>`: Query being a youtube link or a search phrase.\n" +
                 "`Queue`: Shows the queue.\n" +
                 "`Skip`: Skips the current song.\n" +
+                "`Clear`: Clears the queue.\n" +
                 "`Leave`: The bot leaves the voice channel and clears the queue.\n" +
                 "`Volume <volume level>`: Sets the volume (Level between 0 and 150).\n" +
                 "`Shuffle`: Shuffles the current queue.\n" +

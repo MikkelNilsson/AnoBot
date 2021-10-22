@@ -107,8 +107,7 @@ namespace SimpBot.Modules
             await ReplyAsync("Music stopped!");
         }
 
-        [Command("Skip")]
-        [Alias("N")]
+        [Command("Skip", true)]
         private async Task Skip()
         {
             var response = await _musicService.SkipAsync(Context.Guild);
@@ -174,6 +173,13 @@ namespace SimpBot.Modules
             var msg = await ReplyAsync(embed: res.embed);
             await _musicService.AddQueueReactions(msg);
             data.MusicQueueMessage = (msg, page);
+        }
+
+        [Command("Clear")]
+        [Alias("C")]
+        private async Task ClearQueue()
+        {
+            await ReplyAsync(_musicService.Clear(Context.Guild));
         }
     }
 }
