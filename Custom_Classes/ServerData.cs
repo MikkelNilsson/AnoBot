@@ -12,11 +12,16 @@ namespace SimpBot.Custom_Classes
         private ulong welcomeChannel;
         private string welcomeMessage;
         private ulong leaveChannel;
+        
+        public bool QueueLoop { get; set; }
+        public bool SingleLoop { get; set; }
         public (IUserMessage msg, int page)? MusicQueueMessage { get; set; }
         public IUserMessage NowPlayingMessage { get; set; }
 
         public ServerData()
         {
+            QueueLoop = false;
+            SingleLoop = false;
             prefix = "!";
             defaultRole = 0;
             welcomeChannel = 0;

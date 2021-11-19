@@ -47,12 +47,27 @@ namespace SimpBot.Services
             _lavaNode.OnLog += Log;
             _lavaNode.OnTrackEnded += TrackEnded;
             _client.ReactionAdded += OnReactionAdded;
+            _client.UserVoiceStateUpdated += OnUserVoiceUpdate;
             return Task.CompletedTask;
         }
 
-
+        
+        
         public async Task ConnectAsync(SocketVoiceChannel voiceChannel, ITextChannel txtChannel)
             => await _lavaNode.JoinAsync(voiceChannel, txtChannel);
+        
+        private Task OnUserVoiceUpdate(SocketUser user, SocketVoiceState state1, SocketVoiceState state2)
+        {
+            if (!SetPlayer(state2.VoiceChannel.Guild))
+                return Task.CompletedTask;
+            
+            return Task.CompletedTask;
+
+            if (state2.VoiceChannel.Id == _player.VoiceChannel.Id)
+            {
+                
+            }
+        }
 
         private bool SetPlayer(IGuild guild)
         {
@@ -66,7 +81,7 @@ namespace SimpBot.Services
             _data = _dataService.GetServerData(guild.Id);
         }
 
-        public async Task<string> PlayAsync(string query, SocketCommandContext context)
+        public async Task<(string nowPlaying, bool isNowPlaying)> PlayAsync(string query, SocketCommandContext context)
         {
             SetPlayer(context.Guild);
             SearchResponse results;
@@ -86,24 +101,24 @@ namespace SimpBot.Services
             switch (results.LoadStatus)
             {
                 case LoadStatus.NoMatches:
-                    return "No matches found. - " + query;
+                    return ("No matches found. - " + query, false);
                 case LoadStatus.LoadFailed:
                     Util.Log($"MUSIC: LOAD FAILED: {results.Exception.Message}");
-                    return "Load Failed!";
+                    return ("Load Failed!", false);
                 case LoadStatus.SearchResult:
                 case LoadStatus.TrackLoaded:
                     var track = results.Tracks.FirstOrDefault();
-                    if (track is null) return "Load Failed!";
+                    if (track is null) return ("Load Failed!", false);
                     
                     if (_player.PlayerState == PlayerState.Playing)
                     {
                         _player.Queue.Enqueue(track);
-                        return $"*{track.Title}* has been added to the queue.";
+                        return ($"*{track.Title}* has been added to the queue.", false);
                     }
                     else
                     {
                         await _player.PlayAsync(track);
-                        return $"**Now playing:** *{track.Title}*\n{track.Url}";
+                        return ($"**Now playing:** *{track.Title}*\n{track.Url}", true);
                     }
                 case LoadStatus.PlaylistLoaded:
                     foreach (var t in results.Tracks)
@@ -117,9 +132,11 @@ namespace SimpBot.Services
                         _player.Queue.Enqueue(t);
                     }
 
-                    return $"*{results.Playlist.Name}* loaded with {results.Tracks.Count} songs!";
+                    await context.Channel.SendMessageAsync(
+                        $"*{results.Playlist.Name}* loaded with {results.Tracks.Count} songs!");
+                    return ($"**Now playing:** *{_player.Track.Title}*\n{_player.Track.Url}", true);
                 default:
-                    return "Something happened, but I'm not gonna tell you what! HAHA!";
+                    return ("Something happened, but I'm not gonna tell you what! HAHA!", false);
             }
         }
 
@@ -131,9 +148,9 @@ namespace SimpBot.Services
             {
                 return "Fast forward extended track length.";
             }
-            await _player.SeekAsync(_player.Track.Position + TimeSpan.FromSeconds(secs));
+            await _player.SeekAsync(pos);
 
-            return $"Fast forwarded to {(_player.Track.Position.TotalHours >= 1 ? _player.Track.Position.Hours + ":" : "") + _player.Track.Position.Minutes.ToString("D2") + ":" + _player.Track.Position.Seconds.ToString("D2")}.";
+            return $"Fast forwarded to {(pos.TotalHours >= 1 ? pos.Hours + ":" : "") + pos.Minutes.ToString("D2") + ":" + pos.Seconds.ToString("D2")}.";
         }
 
         public string Shuffle(IGuild guild)
@@ -159,20 +176,39 @@ namespace SimpBot.Services
         {
             _lavaNode.GetPlayer(voiceChannel.Guild).Queue.Clear(); //clears queue on leave
             SetData(voiceChannel.Guild);
+            _data.QueueLoop = false;
+            _data.SingleLoop = false;
             _data.MusicQueueMessage = null;
-            
-            if (_data.NowPlayingMessage != null)
-            {
-                await _data.NowPlayingMessage.DeleteAsync();
-                _data.NowPlayingMessage = null;
-            }
+            _data.NowPlayingMessage = null;
             
             await _lavaNode.LeaveAsync(voiceChannel);
         }
 
         private async Task TrackEnded(TrackEndedEventArgs endEvent)
         {
-            if (!endEvent.Reason.ShouldPlayNext())
+
+            if (_client.GetChannel(endEvent.Player.VoiceChannel.Id).Users.Count == 1)
+            {
+                await LeaveAsync((SocketVoiceChannel) _client.GetChannel(endEvent.Player.VoiceChannel.Id));
+                return;
+            }
+
+            SetData(endEvent.Player.VoiceChannel.Guild);
+            SetPlayer(endEvent.Player.VoiceChannel.Guild);
+            if (_data.QueueLoop)
+            {
+                _player.Queue.Enqueue(endEvent.Track);
+            }
+            else if (_data.SingleLoop)
+            {
+                await _player.PlayAsync(endEvent.Track);
+                if (_data.NowPlayingMessage != null)
+                    await _data.NowPlayingMessage.DeleteAsync();
+                _data.NowPlayingMessage = await endEvent.Player.TextChannel.SendMessageAsync(
+                    $"**Now playing *(looping)*:** *{endEvent.Track.Title}*\n{endEvent.Track.Url}");
+                return;
+            }
+            else if (!endEvent.Reason.ShouldPlayNext())
                 return;
 
             if (!endEvent.Player.Queue.TryDequeue(out var item))
@@ -182,7 +218,9 @@ namespace SimpBot.Services
             }
 
             await endEvent.Player.PlayAsync(item);
-            await endEvent.Player.TextChannel.SendMessageAsync(
+            if (_data.NowPlayingMessage != null)
+                await _data.NowPlayingMessage.DeleteAsync();
+            _data.NowPlayingMessage = await endEvent.Player.TextChannel.SendMessageAsync(
                 $"**Now playing:** *{item.Title}*\n{item.Url}");
         }
 
@@ -196,13 +234,19 @@ namespace SimpBot.Services
 
         public async Task<string> SkipAsync(IGuild guild)
         {
-
-            if (!SetPlayer(guild) || _player.Queue.Count is 0)
-                return "Nothing in queue!";
+            if (!SetPlayer(guild) || 
+                (_player.PlayerState != PlayerState.Playing &&
+                _player.PlayerState != PlayerState.Paused))
+                return "Nothing is playing!";
 
             LavaTrack oldTrack = _player.Track;
-            await _player.SkipAsync();
-            return $"**Skipped:** *{oldTrack.Title}*\n**Now playing:** *{_player.Track.Title}*";
+            if (_player.Queue.Count < 1)
+            {
+                await _player.StopAsync();
+                return $"**Skipped:** *{oldTrack.Title}*\n";
+            }
+            await _player.SeekAsync(_player.Track.Duration - TimeSpan.FromMilliseconds(1));
+            return $"**Skipped:** *{oldTrack.Title}*\n";
         }
 
         public async Task<String> SetVolumeAsync(IGuild guild, ushort vol)
@@ -238,12 +282,13 @@ namespace SimpBot.Services
 
         public (Embed embed, string errmsg, bool err, bool isLastPage) Queue(IGuild guild, int pageNumber, bool edit)
         {
-            if (!SetPlayer(guild))
+            int count = _player.Queue.Count();
+            if (!SetPlayer(guild) || count < 1)
                 return (null, "Queue empty", true, false);
             
             --pageNumber;
             
-            int count = _player.Queue.Count();
+            
             int offset = pageNumber * 10;
 
             if (offset >= count)
@@ -352,5 +397,31 @@ namespace SimpBot.Services
         // {
         //     return (Util.isAno(context) || true);
         // }
+        
+        public string LoopSingle(SocketGuild contextGuild)
+        {
+            if (!SetPlayer(contextGuild))
+            {
+                return "Player is not playing";
+            }
+            SetData(contextGuild);
+            
+            _data.SingleLoop = !_data.SingleLoop;
+            _data.QueueLoop = false;
+            return (_data.SingleLoop ? "Looping the first song" : "Looping stopped");
+        }
+
+        public string LoopQueue(SocketGuild contextGuild)
+        {
+            if (!SetPlayer(contextGuild))
+            {
+                return "Player is not playing";
+            }
+            SetData(contextGuild);
+            
+            _data.QueueLoop = !_data.QueueLoop;
+            _data.SingleLoop = false;
+            return (_data.QueueLoop ? "Looping the playlist" : "Looping stopped");
+        }
     }
 }

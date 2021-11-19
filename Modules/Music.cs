@@ -96,8 +96,17 @@ namespace SimpBot.Modules
             if (!_musicService.NodeHasPlayer(Context.Guild))
                 await Join();
             Util.Log($"MUSIC: Trying to play {query}");
-            var result = _musicService.PlayAsync(query, Context);
-            await ReplyAsync(result.Result);
+            var (nowPlaying, isNowPlaying) = await _musicService.PlayAsync(query, Context);
+
+            if (isNowPlaying)
+            {
+                var data = _dataService.GetServerData(Context.Guild.Id);
+                if (data.NowPlayingMessage != null)
+                    await data.NowPlayingMessage.DeleteAsync();
+                data.NowPlayingMessage = await ReplyAsync(nowPlaying);
+            }
+            else
+                await ReplyAsync(nowPlaying);
         }
 
         [Command("Stop")]
@@ -110,10 +119,24 @@ namespace SimpBot.Modules
         [Command("Skip", true)]
         private async Task Skip()
         {
-            var response = await _musicService.SkipAsync(Context.Guild);
-            await ReplyAsync(response);
+            var res = await _musicService.SkipAsync(Context.Guild);
+            await ReplyAsync(res);
         }
 
+        [Command("Loop")]
+        private async Task LoopQueue()
+        {
+            var res = _musicService.LoopQueue(Context.Guild);
+            await ReplyAsync(res);
+        }
+
+        [Command("LoopSingle")]
+        private async Task LoopSingle()
+        {
+            var res = _musicService.LoopSingle(Context.Guild);
+            await ReplyAsync(res);
+        }
+        
         [Command("Volume")]
         private async Task Volume(ushort vol)
         {

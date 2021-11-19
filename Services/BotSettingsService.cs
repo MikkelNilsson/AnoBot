@@ -89,7 +89,9 @@ namespace SimpBot
                 "`Leave`: The bot leaves the voice channel and clears the queue.\n" +
                 "`Volume <volume level>`: Sets the volume (Level between 0 and 150).\n" +
                 "`Shuffle`: Shuffles the current queue.\n" +
-                "`FastForward <amount in seconds>`: Fast forwards the track a given amount.\n");
+                "`FastForward <amount in seconds>`: Fast forwards the track a given amount.\n" +
+                "`Loop`: Loops playlist.\n" +
+                "`LoopSingle`: Loops the first song playing.\n");
 
             var embed = res.WithAuthor(context.Client.CurrentUser)
                 .WithFooter(
