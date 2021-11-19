@@ -423,7 +423,7 @@ namespace SimpBot.Services
         {
             SocketGuildUser guser = (SocketGuildUser)user;
             SetData(guser.Guild);
-            return (Util.isAno(guser) || !_data.HasMusicRole() || guser.Roles.Contains(guser.Guild.GetRole(_data.MusicRole)));
+            return (/*Util.isAno(guser) ||*/ !_data.HasMusicRole() || guser.Roles.Contains(guser.Guild.GetRole(_data.MusicRole)));
         }
     }
 }

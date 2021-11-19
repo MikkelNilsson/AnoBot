@@ -220,7 +220,7 @@ namespace SimpBot.Modules
 
         private async Task<bool> Permission()
         {
-            if (_musicService.HasMusicPrivilege(Context.User))
+            if (!_musicService.HasMusicPrivilege(Context.User))
             {
                 await ReplyAsync("Permission denied");
                 return false;
