@@ -47,27 +47,27 @@ namespace SimpBot.Services
             _lavaNode.OnLog += Log;
             _lavaNode.OnTrackEnded += TrackEnded;
             _client.ReactionAdded += OnReactionAdded;
-            _client.UserVoiceStateUpdated += OnUserVoiceUpdate;
+            //_client.UserVoiceStateUpdated += OnUserVoiceUpdate;
             return Task.CompletedTask;
         }
 
-        
-        
+
+
         public async Task ConnectAsync(SocketVoiceChannel voiceChannel, ITextChannel txtChannel)
             => await _lavaNode.JoinAsync(voiceChannel, txtChannel);
-        
-        private Task OnUserVoiceUpdate(SocketUser user, SocketVoiceState state1, SocketVoiceState state2)
-        {
-            if (!SetPlayer(state2.VoiceChannel.Guild))
-                return Task.CompletedTask;
-            
-            return Task.CompletedTask;
 
-            if (state2.VoiceChannel.Id == _player.VoiceChannel.Id)
-            {
-                
-            }
-        }
+        // private Task OnUserVoiceUpdate(SocketUser user, SocketVoiceState state1, SocketVoiceState state2)
+        // {
+        //     if (!SetPlayer(state2.VoiceChannel.Guild))
+        //         return Task.CompletedTask;
+
+        //     return Task.CompletedTask;
+
+        //     if (state2.VoiceChannel.Id == _player.VoiceChannel.Id)
+        //     {
+        //         //Create something here
+        //     }
+        // }
 
         private bool SetPlayer(IGuild guild)
         {
@@ -109,7 +109,7 @@ namespace SimpBot.Services
                 case LoadStatus.TrackLoaded:
                     var track = results.Tracks.FirstOrDefault();
                     if (track is null) return ("Load Failed!", false);
-                    
+
                     if (_player.PlayerState == PlayerState.Playing)
                     {
                         _player.Queue.Enqueue(track);
@@ -155,7 +155,6 @@ namespace SimpBot.Services
 
         public string Shuffle(IGuild guild)
         {
-
             if (!SetPlayer(guild) || _player.Queue.Count <= 0)
             {
                 return "";
@@ -168,11 +167,12 @@ namespace SimpBot.Services
         {
             if (!SetPlayer(guild))
                 return "";
+
             _player.Queue.Clear();
             return "Queue cleared.";
         }
 
-        public async Task LeaveAsync(SocketVoiceChannel voiceChannel)
+        public async Task<string> LeaveAsync(SocketVoiceChannel voiceChannel)
         {
             _lavaNode.GetPlayer(voiceChannel.Guild).Queue.Clear(); //clears queue on leave
             SetData(voiceChannel.Guild);
@@ -180,18 +180,19 @@ namespace SimpBot.Services
             _data.SingleLoop = false;
             _data.MusicQueueMessage = null;
             _data.NowPlayingMessage = null;
-            
+
             await _lavaNode.LeaveAsync(voiceChannel);
+            return "";
         }
 
         private async Task TrackEnded(TrackEndedEventArgs endEvent)
         {
 
-            if (_client.GetChannel(endEvent.Player.VoiceChannel.Id).Users.Count == 1)
-            {
-                await LeaveAsync((SocketVoiceChannel) _client.GetChannel(endEvent.Player.VoiceChannel.Id));
-                return;
-            }
+            // if (_client.GetChannel(endEvent.Player.VoiceChannel.Id).Users.Count == 1)
+            // {
+            //     await LeaveAsync((SocketVoiceChannel)_client.GetChannel(endEvent.Player.VoiceChannel.Id));
+            //     return;
+            // }
 
             SetData(endEvent.Player.VoiceChannel.Guild);
             SetPlayer(endEvent.Player.VoiceChannel.Guild);
@@ -234,7 +235,7 @@ namespace SimpBot.Services
 
         public async Task<string> SkipAsync(IGuild guild)
         {
-            if (!SetPlayer(guild) || 
+            if (!SetPlayer(guild) ||
                 (_player.PlayerState != PlayerState.Playing &&
                 _player.PlayerState != PlayerState.Paused))
                 return "Nothing is playing!";
@@ -264,7 +265,6 @@ namespace SimpBot.Services
 
         public async Task<string> PauseOrResumeAsync(IGuild guild, string command)
         {
-
             if (!SetPlayer(guild))
                 return "I'm not even playing!";
 
@@ -285,10 +285,10 @@ namespace SimpBot.Services
             int count = _player.Queue.Count();
             if (!SetPlayer(guild) || count < 1)
                 return (null, "Queue empty", true, false);
-            
+
             --pageNumber;
-            
-            
+
+
             int offset = pageNumber * 10;
 
             if (offset >= count)
@@ -309,11 +309,11 @@ namespace SimpBot.Services
             }
 
             bool isLastPage = (offset + 10) >= count;
-            
+
             var resEmbed = embed.WithColor(new Color(0x000000))
                 .WithFooter("page: " + (pageNumber + 1) + "/" + Math.Ceiling(count / 10.0))
                 .Build();
-            
+
             if (edit)
             {
                 SetData(guild);
@@ -322,10 +322,10 @@ namespace SimpBot.Services
                 _data.MusicQueueMessage = (_data.MusicQueueMessage.Value.msg, pageNumber + 1);
                 return (null, "", false, isLastPage);
             }
-            
+
             return (resEmbed, "", false, isLastPage);
         }
-        
+
         public async Task AddQueueReactions(IMessage msg)
         {
             await msg.AddReactionAsync(new Emoji("\U000023EE"));
@@ -333,14 +333,14 @@ namespace SimpBot.Services
             await msg.AddReactionAsync(new Emoji("\U000025B6"));
             await msg.AddReactionAsync(new Emoji("\U000023ED"));
         }
-        
+
         private async Task OnReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
         {
             var chan = arg2 as IGuildChannel;
             if (chan is null) return;
             SetData(chan.Guild);
-            
-            if (arg1.HasValue && !Util.isMe(arg3.User.Value) && _data.MusicQueueMessage.HasValue && arg1.Value.Id == _data.MusicQueueMessage.Value.msg.Id)
+
+            if (arg1.HasValue && HasMusicPrivilege((SocketGuildUser)arg1.Value.Author) && !Util.isMe(arg3.User.Value) && _data.MusicQueueMessage.HasValue && arg1.Value.Id == _data.MusicQueueMessage.Value.msg.Id)
             {
                 var pageNumber = -1;
                 if (arg3.Emote.Equals(new Emoji("\U000023EE")))
@@ -362,8 +362,8 @@ namespace SimpBot.Services
                 }
 
                 if (pageNumber == -1) return;
-                
-                var (_, _,err, _) = Queue(chan.Guild, pageNumber, true);
+
+                var (_, _, err, _) = Queue(chan.Guild, pageNumber, true);
 
                 if (err) return;
 
@@ -393,11 +393,6 @@ namespace SimpBot.Services
             return _lavaNode.HasPlayer(guild);
         }
 
-        // public static bool HasMusicPrivilege(SocketCommandContext context)
-        // {
-        //     return (Util.isAno(context) || true);
-        // }
-        
         public string LoopSingle(SocketGuild contextGuild)
         {
             if (!SetPlayer(contextGuild))
@@ -405,7 +400,7 @@ namespace SimpBot.Services
                 return "Player is not playing";
             }
             SetData(contextGuild);
-            
+
             _data.SingleLoop = !_data.SingleLoop;
             _data.QueueLoop = false;
             return (_data.SingleLoop ? "Looping the first song" : "Looping stopped");
@@ -418,10 +413,17 @@ namespace SimpBot.Services
                 return "Player is not playing";
             }
             SetData(contextGuild);
-            
+
             _data.QueueLoop = !_data.QueueLoop;
             _data.SingleLoop = false;
             return (_data.QueueLoop ? "Looping the playlist" : "Looping stopped");
+        }
+
+        public bool HasMusicPrivilege(IUser user)
+        {
+            SocketGuildUser guser = (SocketGuildUser)user;
+            SetData(guser.Guild);
+            return (Util.isAno(guser) || !_data.HasMusicRole() || guser.Roles.Contains(guser.Guild.GetRole(_data.MusicRole)));
         }
     }
 }

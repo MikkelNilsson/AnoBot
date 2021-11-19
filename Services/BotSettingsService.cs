@@ -37,14 +37,14 @@ namespace SimpBot
         //--- Prefix ---
         public string SetPrefix(IGuild guild, string prefix)
         {
-            _dataService.GetServerData(guild.Id).SetPrefix(prefix);
+            _dataService.GetServerData(guild.Id).Prefix = prefix;
             _dataService.SaveServerData(guild.Id);
             return $"Prefix set to {prefix}";
         }
 
         public string GetPrefix(IGuild guild)
         {
-            return _dataService.GetServerData(guild.Id).GetPrefix();
+            return _dataService.GetServerData(guild.Id).Prefix;
         }
 
         //--- Help ---
@@ -63,7 +63,7 @@ namespace SimpBot
                 Color = Color.Blue
             };
 
-            if (gUser.GuildPermissions.Has(GuildPermission.ManageGuild) || Util.isAno(context))
+            if (gUser.GuildPermissions.Has(GuildPermission.ManageGuild) || Util.isAno((SocketGuildUser) context.User))
             {
                 res.AddField("**__Bot Settings:__**",
                     "`SetPrefix <prefix>` or use `SP <prefix>`: Use to set prefix for commands.");
@@ -79,6 +79,9 @@ namespace SimpBot
                 res.AddField("**__Leave Message:__**",
                     "`LeaveMessage <channel>` or use `LME <channel>`: A message is sent when a user leaves the server in the specified channel.\n" +
                     "`RemoveLeaveMessage` or use `RLM`: Disables the leave message function.");
+                res.AddField("**__Music Permissions:__**",
+                    "`SetMusicRole <Role>` or use `SMR <Role>`: Sets a role to grant music privileges, only users with this role will be able to play music.\n" + 
+                    "`RemoveMusicRole` or use `RMR`: Removes music role, everyone can play music with WUbot.");
             }
 
             res.AddField("**__Music:__**",
@@ -105,28 +108,22 @@ namespace SimpBot
         public IRole GetDefaultRole(IGuild guild)
         {
             if (_dataService.GetServerData(guild.Id).HasDefaultRole())
-                return guild.GetRole(_dataService.GetServerData(guild.Id).GetDefaultRole());
+                return guild.GetRole(_dataService.GetServerData(guild.Id).DefaultRole);
             else return guild.EveryoneRole;
         }
 
         public string SetDefaultRole(IGuild guild, string command)
         {
+            command = command.Trim();
             if (!command.StartsWith("<@&"))
                 return $"{command} is not a valid role!";
             command = command.Substring(3, command.Length - 4);
-            IRole dRole = null;
-            foreach (IRole role in guild.Roles)
-            {
-                if (role.Id == ulong.Parse(command))
-                {
-                    dRole = role;
-                    break;
-                }
-            }
-            if (dRole is null)
-                return $"Role not found {command}";
+            IRole dRole = guild.GetRole(ulong.Parse(command)); 
 
-            _dataService.GetServerData(guild.Id).SetDefaultRole(dRole.Id);
+            if (dRole is null)
+                return $"Role not found: {command}";
+
+            _dataService.GetServerData(guild.Id).DefaultRole = dRole.Id;
             _dataService.SaveServerData(guild.Id);
             return $"Default role set to {dRole.Name}";
         }
@@ -139,6 +136,34 @@ namespace SimpBot
             _dataService.GetServerData(guild.Id).RemoveDefaultRole();
             _dataService.SaveServerData(guild.Id);
             return "Removed default role.";
+        }
+
+        public string SetMusicRole(SocketGuild guild, string sRole)
+        {
+            sRole = sRole.Trim();
+            if (!sRole.StartsWith("<@&"))
+                return $"{sRole} is not a valid role!";
+
+            sRole = sRole.Substring(3, sRole.Length - 4);
+
+            IRole mRole = guild.GetRole(ulong.Parse(sRole)); 
+
+            if (mRole is null)
+                return $"Role not found: {sRole}";
+
+            _dataService.GetServerData(guild.Id).MusicRole = mRole.Id;
+            _dataService.SaveServerData(guild.Id);
+            return $"Default role set to {mRole.Name}";
+        }
+
+        public string RemoveMusicRole(SocketGuild guild)
+        {
+            if (!_dataService.GetServerData(guild.Id).HasDefaultRole())
+                return "No music role has been set.";
+
+            _dataService.GetServerData(guild.Id).RemoveMusicRole();
+            _dataService.SaveServerData(guild.Id);
+            return "Removed music role.";
         }
     }
 }

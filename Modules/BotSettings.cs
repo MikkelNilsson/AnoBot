@@ -45,7 +45,6 @@ namespace SimpBot.Modules
         public async Task SetDefaultRole(string remainder)
         {
             await ReplyAsync(_settingsService.SetDefaultRole(Context.Guild, remainder));
-            await Context.Message.DeleteAsync();
         }
 
         [Command("RemoveDefaultRole", true)]
@@ -54,6 +53,23 @@ namespace SimpBot.Modules
         public async Task RemoveDefaultRole()
         {
             await ReplyAsync(_settingsService.RemoveDefaultRole(Context.Guild));
+        }
+
+        [Command("SetMusicRole")]
+        [Alias("SMR")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        private async Task SetMusicRole(string remainder)
+        {
+            await ReplyAsync(_settingsService.SetMusicRole(Context.Guild, remainder));
+
+        }
+
+        [Command("RemoveMusicRole", true)]
+        [Alias("RMR")]
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        private async Task RemoveMusicRole()
+        {
+            await ReplyAsync(_settingsService.RemoveMusicRole(Context.Guild));
         }
     }
 }
