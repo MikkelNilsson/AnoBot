@@ -7,8 +7,9 @@ namespace SimpBot.Custom_Classes
 
     public class ServerData
     {
-        private string prefix;
-        private ulong defaultRole;
+        public string Prefix{ get; set; }
+        public ulong DefaultRole { get; set; }
+        public ulong MusicRole { get; set; }
         private ulong welcomeChannel;
         private string welcomeMessage;
         private ulong leaveChannel;
@@ -17,8 +18,9 @@ namespace SimpBot.Custom_Classes
 
         public ServerData()
         {
-            prefix = "!";
-            defaultRole = 0;
+            Prefix = "!";
+            DefaultRole = 0;
+            MusicRole = 0; 
             welcomeChannel = 0;
             welcomeMessage = "";
             leaveChannel = 0;
@@ -34,10 +36,13 @@ namespace SimpBot.Custom_Classes
                 switch (sarr[0])
                 {
                     case("prefix"):
-                        res.prefix = sarr[1];
+                        res.Prefix = sarr[1];
                         break;
                     case("defaultRole"):
-                        res.defaultRole = ulong.Parse(sarr[1]);
+                        res.DefaultRole = ulong.Parse(sarr[1]);
+                        break;
+                    case("musicRole"):
+                        res.MusicRole = ulong.Parse(sarr[1]);
                         break;
                     case("welcomeMessage"):
                         res.ParseWelcomeMessage(sarr[1]);
@@ -61,43 +66,33 @@ namespace SimpBot.Custom_Classes
         public string Serialize(ulong guildId)
         {
             return (
-                (prefix != "!" ? "prefix: " + prefix + "\n" : "") +
-                (HasDefaultRole() ? "defaultRole: " + defaultRole + "\n" : "") +
+                (Prefix != "!" ? "prefix: " + Prefix + "\n" : "") +
+                (HasDefaultRole() ? "defaultRole: " + DefaultRole + "\n" : "") +
                 (HasWelcomeMessage() ? "welcomeMessage: " + welcomeChannel + "message: " + welcomeMessage.Replace("\n", "|NewlinE|") + "\n" : "") +
                 (HasLeaveMessage() ? "leaveMessage: " + leaveChannel + "\n" : "")
-            );
-        }
-        
-        //--Prefix--
-        public void SetPrefix(string newPrefix)
-        {
-            prefix = newPrefix;
-        }
 
-        public string GetPrefix()
-        {
-            return prefix;
+            );
         }
 
         //--Default Role--
         public bool HasDefaultRole()
         {
-            return defaultRole != 0;
-        }
-
-        public ulong GetDefaultRole()
-        {
-            return defaultRole;
-        }
-
-        public void SetDefaultRole(ulong dRoleId)
-        {
-            defaultRole = dRoleId;
+            return DefaultRole != 0;
         }
 
         internal void RemoveDefaultRole()
         {
-            defaultRole = 0;
+            DefaultRole = 0;
+        }
+
+        //--Music Role--
+
+        public bool HasMusicRole(){
+            return MusicRole != 0;
+        }
+
+        public void RemoveMusicRole(){
+            MusicRole = 0;
         }
 
         //--Welcome Message--

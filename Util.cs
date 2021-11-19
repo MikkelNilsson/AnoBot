@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
+using Discord.WebSocket;
 
 namespace SimpBot
 {
@@ -17,9 +17,9 @@ namespace SimpBot
             return Task.CompletedTask;
         }
 
-        public static bool isAno(SocketCommandContext context)
+        public static bool isAno(SocketGuildUser user)
         {
-            return (context.User.Id == 215044487871725573 || context.User.Id == 763301348078387260);
+            return (user.Id == 215044487871725573 || user.Id == 763301348078387260);
         }
 
         public static bool isMe(IUser user)

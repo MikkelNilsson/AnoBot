@@ -138,7 +138,6 @@ namespace SimpBot.Services
 
         public string Shuffle(IGuild guild)
         {
-
             if (!SetPlayer(guild) || _player.Queue.Count <= 0)
             {
                 return "";
@@ -151,11 +150,12 @@ namespace SimpBot.Services
         {
             if (!SetPlayer(guild))
                 return "";
+
             _player.Queue.Clear();
             return "Queue cleared.";
         }
 
-        public async Task LeaveAsync(SocketVoiceChannel voiceChannel)
+        public async Task<string> LeaveAsync(SocketVoiceChannel voiceChannel)
         {
             _lavaNode.GetPlayer(voiceChannel.Guild).Queue.Clear(); //clears queue on leave
             SetData(voiceChannel.Guild);
@@ -168,6 +168,7 @@ namespace SimpBot.Services
             }
             
             await _lavaNode.LeaveAsync(voiceChannel);
+            return "";
         }
 
         private async Task TrackEnded(TrackEndedEventArgs endEvent)
@@ -196,7 +197,6 @@ namespace SimpBot.Services
 
         public async Task<string> SkipAsync(IGuild guild)
         {
-
             if (!SetPlayer(guild) || _player.Queue.Count is 0)
                 return "Nothing in queue!";
 
@@ -220,7 +220,6 @@ namespace SimpBot.Services
 
         public async Task<string> PauseOrResumeAsync(IGuild guild, string command)
         {
-
             if (!SetPlayer(guild))
                 return "I'm not even playing!";
 
@@ -295,7 +294,7 @@ namespace SimpBot.Services
             if (chan is null) return;
             SetData(chan.Guild);
             
-            if (arg1.HasValue && !Util.isMe(arg3.User.Value) && _data.MusicQueueMessage.HasValue && arg1.Value.Id == _data.MusicQueueMessage.Value.msg.Id)
+            if (arg1.HasValue && HasMusicPrivilege((SocketGuildUser) arg1.Value.Author) && !Util.isMe(arg3.User.Value) && _data.MusicQueueMessage.HasValue && arg1.Value.Id == _data.MusicQueueMessage.Value.msg.Id)
             {
                 var pageNumber = -1;
                 if (arg3.Emote.Equals(new Emoji("\U000023EE")))
@@ -348,9 +347,11 @@ namespace SimpBot.Services
             return _lavaNode.HasPlayer(guild);
         }
 
-        // public static bool HasMusicPrivilege(SocketCommandContext context)
-        // {
-        //     return (Util.isAno(context) || true);
-        // }
+        public bool HasMusicPrivilege(IUser user)
+        {
+            SocketGuildUser guser = (SocketGuildUser) user;
+            SetData(guser.Guild);
+            return (Util.isAno(guser) || !_data.HasMusicRole() || guser.Roles.Contains(guser.Guild.GetRole(_data.MusicRole)));
+        }
     }
 }

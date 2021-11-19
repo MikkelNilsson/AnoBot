@@ -22,7 +22,7 @@ namespace SimpBot.Modules
         [Command("Join")]
         private async Task Join()
         {
-            //if (!_musicService.HasMusicPrivilege(Context)) return;
+            if (!await Permission()) return;
             if (_musicService.NodeHasPlayer(Context.Guild))
             {
                 await ReplyAsync("I'm already connected to a voice channel!");
@@ -53,6 +53,7 @@ namespace SimpBot.Modules
         [Command("Leave")]
         private async Task Leave()                       //It can only disconnect if you're in the channel the bot is in.
         {
+            if (!await Permission()) return;
             if (!_musicService.NodeHasPlayer(Context.Guild))
                 return;
 
@@ -65,6 +66,7 @@ namespace SimpBot.Modules
         [Alias("FF")]
         private async Task FastForward([Remainder] string secs)
         {
+            if (!await Permission()) return;
             if (!_musicService.NodeHasPlayer(Context.Guild))
             {
                 await ReplyAsync("Bot is not connected to a voice channel.");
@@ -93,6 +95,7 @@ namespace SimpBot.Modules
         [Alias("P")]
         private async Task Play([Remainder] string query)
         {
+            if (!await Permission()) return;
             if (!_musicService.NodeHasPlayer(Context.Guild))
                 await Join();
             Util.Log($"MUSIC: Trying to play {query}");
@@ -103,6 +106,7 @@ namespace SimpBot.Modules
         [Command("Stop")]
         private async Task Stop()
         {
+            if (!await Permission()) return;
             await _musicService.StopAsync(Context.Guild);
             await ReplyAsync("Music stopped!");
         }
@@ -110,6 +114,7 @@ namespace SimpBot.Modules
         [Command("Skip", true)]
         private async Task Skip()
         {
+            if (!await Permission()) return;
             var response = await _musicService.SkipAsync(Context.Guild);
             await ReplyAsync(response);
         }
@@ -117,24 +122,28 @@ namespace SimpBot.Modules
         [Command("Volume")]
         private async Task Volume(ushort vol)
         {
+            if (!await Permission()) return;
             await ReplyAsync(await _musicService.SetVolumeAsync(Context.Guild, vol));
         }
 
         [Command("Pause")]
         private async Task Pause()
         {
+            if (!await Permission()) return;
             await ReplyAsync(await _musicService.PauseOrResumeAsync(Context.Guild, "pause"));
         }
 
         [Command("Resume")]
         private async Task Resume()
         {
+            if (!await Permission()) return;
             await ReplyAsync(await _musicService.PauseOrResumeAsync(Context.Guild, "resume"));
         }
 
         [Command("Shuffle")]
         private async Task Shuffle()
         {
+            if (!await Permission()) return;
             await ReplyAsync(_musicService.Shuffle(Context.Guild));
         }
 
@@ -161,6 +170,7 @@ namespace SimpBot.Modules
 
         private async Task QueueLogic(int page)
         {
+            if (!await Permission()) return; 
             var data = _dataService.GetServerData(Context.Guild.Id);
 
             var res = _musicService.Queue(Context.Guild, page, false);
@@ -179,7 +189,16 @@ namespace SimpBot.Modules
         [Alias("C")]
         private async Task ClearQueue()
         {
+            if (!await Permission()) return;
             await ReplyAsync(_musicService.Clear(Context.Guild));
+        }
+
+        private async Task<bool> Permission(){
+            if (_musicService.HasMusicPrivilege(Context.User)){
+                await ReplyAsync("Permission denied");
+                return false;
+            }
+            return true;
         }
     }
 }
