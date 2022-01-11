@@ -159,7 +159,6 @@ namespace SimpBot.Custom_Classes
 
         public void stopMusicTimer()
         {
-            Console.WriteLine("Stop timer call!");
             if (hasMusicTimer())
             {
                 Timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
@@ -169,15 +168,14 @@ namespace SimpBot.Custom_Classes
 
         public void startMusicTimer(LavaPlayer player, LavaNode node)
         {
-            Console.WriteLine("start timer call!");
             if (!hasMusicTimer())
                 Timer = new Timer(TimerCallback, new TimerCallbackObject
                 {
                     n = node,
                     p = player
-                }, TimeSpan.FromSeconds(10), Timeout.InfiniteTimeSpan);
+                }, TimeSpan.FromMinutes(3), Timeout.InfiniteTimeSpan);
             else
-                Timer.Change(TimeSpan.FromSeconds(10), Timeout.InfiniteTimeSpan);
+                Timer.Change(TimeSpan.FromMinutes(3), Timeout.InfiniteTimeSpan);
             isTimerActive = true;
         }
 
@@ -189,17 +187,9 @@ namespace SimpBot.Custom_Classes
         
         private async void TimerCallback(object o)
         {
-            Console.WriteLine("timer callback function! with is active = " + (isTimerActive ? "true" : "false"));
             TimerCallbackObject t = (TimerCallbackObject) o;
             if (isTimerActive)
-            {
-                Console.WriteLine("Leave please");
                 await t.n.LeaveAsync(t.p.VoiceChannel);
-            }
-            else
-            {
-                Console.WriteLine("Don't leave me! :(");
-            }
         }
     }
 }
