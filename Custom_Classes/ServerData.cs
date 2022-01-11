@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using Discord;
+using System.Threading;
+using Victoria;
 
 namespace SimpBot.Custom_Classes
 {
@@ -18,6 +20,7 @@ namespace SimpBot.Custom_Classes
         public bool SingleLoop { get; set; }
         public (IUserMessage msg, int page)? MusicQueueMessage { get; set; }
         public IUserMessage NowPlayingMessage { get; set; }
+        public Timer Timer { get; set; }
 
         public ServerData()
         {
@@ -144,6 +147,59 @@ namespace SimpBot.Custom_Classes
         public ulong getLeaveChannel()
         {
             return leaveChannel;
+        }
+        
+        //--Connection timer--
+        private bool hasMusicTimer()
+        {
+            return Timer != null;
+        }
+
+        private bool isTimerActive;
+
+        public void stopMusicTimer()
+        {
+            Console.WriteLine("Stop timer call!");
+            if (hasMusicTimer())
+            {
+                Timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+                isTimerActive = false;
+            }
+        }
+
+        public void startMusicTimer(LavaPlayer player, LavaNode node)
+        {
+            Console.WriteLine("start timer call!");
+            if (!hasMusicTimer())
+                Timer = new Timer(TimerCallback, new TimerCallbackObject
+                {
+                    n = node,
+                    p = player
+                }, TimeSpan.FromSeconds(10), Timeout.InfiniteTimeSpan);
+            else
+                Timer.Change(TimeSpan.FromSeconds(10), Timeout.InfiniteTimeSpan);
+            isTimerActive = true;
+        }
+
+        private class TimerCallbackObject
+        {
+            public LavaNode n;
+            public LavaPlayer p;
+        }
+        
+        private async void TimerCallback(object o)
+        {
+            Console.WriteLine("timer callback function! with is active = " + (isTimerActive ? "true" : "false"));
+            TimerCallbackObject t = (TimerCallbackObject) o;
+            if (isTimerActive)
+            {
+                Console.WriteLine("Leave please");
+                await t.n.LeaveAsync(t.p.VoiceChannel);
+            }
+            else
+            {
+                Console.WriteLine("Don't leave me! :(");
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using Discord.Commands;
 using Victoria.Responses.Rest;
 using SimpBot.Custom_Classes;
+using System.Threading;
 
 namespace SimpBot.Services
 {
@@ -81,13 +82,29 @@ namespace SimpBot.Services
             _data = _dataService.GetServerData(guild.Id);
         }
 
+        private void startMusicTimer(IGuild guild)
+        {
+            if (!SetPlayer(guild)) return;
+            SetData(guild);
+            _data.startMusicTimer(_player, _lavaNode);
+        }
+
+        private void stopMusicTimer(IGuild guild)
+        {
+            SetData(guild);
+            _data.stopMusicTimer();
+        }
+
         public async Task<(string nowPlaying, bool isNowPlaying)> PlayAsync(string query, SocketCommandContext context)
         {
             SetPlayer(context.Guild);
+            startMusicTimer(context.Guild);
             SearchResponse results;
             if (Uri.IsWellFormedUriString(query, UriKind.Absolute))
             {
                 Util.Log("MUSIC: Link Detected");
+                if (query.ToLower().Contains("spotify.com"))
+                    return ("I can't play from Spotify, working on it though!", false);
                 results = await _lavaNode.SearchAsync(query);
             }
             else
@@ -110,6 +127,8 @@ namespace SimpBot.Services
                     var track = results.Tracks.FirstOrDefault();
                     if (track is null) return ("Load Failed!", false);
 
+                    stopMusicTimer(context.Guild);
+                    
                     if (_player.PlayerState == PlayerState.Playing)
                     {
                         _player.Queue.Enqueue(track);
@@ -134,6 +153,7 @@ namespace SimpBot.Services
 
                     await context.Channel.SendMessageAsync(
                         $"*{results.Playlist.Name}* loaded with {results.Tracks.Count} songs!");
+                    stopMusicTimer(context.Guild);
                     return ($"**Now playing:** *{_player.Track.Title}*\n{_player.Track.Url}", true);
                 default:
                     return ("Something happened, but I'm not gonna tell you what! HAHA!", false);
@@ -212,9 +232,13 @@ namespace SimpBot.Services
             else if (!endEvent.Reason.ShouldPlayNext())
                 return;
 
+            if (endEvent.Player.PlayerState == PlayerState.Playing)
+                return;
+            
             if (!endEvent.Player.Queue.TryDequeue(out var item))
             {
                 await endEvent.Player.TextChannel.SendMessageAsync("Queue empty.");
+                _data.startMusicTimer(_player, _lavaNode);
                 return;
             }
 
@@ -229,7 +253,9 @@ namespace SimpBot.Services
         {
             if (!SetPlayer(guild))
                 return;
-
+            
+            startMusicTimer(guild);
+            
             await _player.StopAsync();
         }
 
@@ -241,9 +267,13 @@ namespace SimpBot.Services
                 return "Nothing is playing!";
 
             LavaTrack oldTrack = _player.Track;
+            Console.WriteLine(_player.Queue.Count.ToString());
             if (_player.Queue.Count < 1)
             {
                 await _player.StopAsync();
+                
+                startMusicTimer(guild);
+                
                 return $"**Skipped:** *{oldTrack.Title}*\n";
             }
             await _player.SeekAsync(_player.Track.Duration - TimeSpan.FromMilliseconds(1));
@@ -270,6 +300,7 @@ namespace SimpBot.Services
 
             if (_player.PlayerState == PlayerState.Paused)
             {
+                stopMusicTimer(guild);
                 await _player.ResumeAsync();
                 return "Music resumed!";
             }
@@ -277,6 +308,7 @@ namespace SimpBot.Services
                 return "Music is already playing!";
 
             await _player.PauseAsync();
+            startMusicTimer(guild);
             return "Paused music!";
         }
 
