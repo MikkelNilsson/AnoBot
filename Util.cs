@@ -9,6 +9,7 @@ namespace SimpBot
     {
         public static void Log(string message, LogSeverity logSeverity = LogSeverity.Info, string source = "Unknown" )
         {
+            //add append to file to store logs log term kind of (maybe 14 days worth of logs)
             Log(new LogMessage(logSeverity, source , message));
         }
         public static Task Log(LogMessage logMessage)

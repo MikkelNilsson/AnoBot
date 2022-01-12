@@ -8,10 +8,14 @@ using Victoria.EventArgs;
 using Victoria.Enums;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics.X86;
 using Discord.Commands;
 using Victoria.Responses.Rest;
 using SimpBot.Custom_Classes;
 using System.Threading;
+using EmbedIO.Utilities;
+using SpotifyAPI.Web;
+using SearchResponse = Victoria.Responses.Rest.SearchResponse;
 
 namespace SimpBot.Services
 {
@@ -22,8 +26,8 @@ namespace SimpBot.Services
     //TODO BASSBOOST funtionality: !bassboost 2 -> bassboost 2 out of 10
     //Done TODO queue a playlist: !playlist "link" -> queue every song in playlist (up to 25 songs)
     //TODO Soundcloud play with specific soundcloud link or !soundcloud
-    //TODO Automatic disconnect after 5 mins with nobody in the channel
-    //TODO spotify playlist retrieve songtitles and stuff to play from yt
+    //DONE TODO Automatic disconnect after 5 mins with nobody in the channel
+    //DONE TODO spotify playlist retrieve songtitles and stuff to play from yt
     //TODO setting: clear queue on leave
     //Done TODO clear functionality -> clear queue.
     public class MusicService
@@ -34,12 +38,14 @@ namespace SimpBot.Services
         private LavaPlayer _player;
         private ServerData _data;
         private readonly DataService _dataService;
-        public MusicService(LavaConfig lavaConfig, LavaNode lavaNode, DiscordSocketClient client, DataService dataService)
+        private readonly SpotifyClient _spotify;
+        public MusicService(LavaConfig lavaConfig, LavaNode lavaNode, SpotifyClient spotify, DiscordSocketClient client, DataService dataService)
         {
             _lavaConfig = lavaConfig;
             _lavaNode = lavaNode;
             _client = client;
             _dataService = dataService;
+            _spotify = spotify;
         }
 
         public Task InitializeAsync()
@@ -103,8 +109,12 @@ namespace SimpBot.Services
             if (Uri.IsWellFormedUriString(query, UriKind.Absolute))
             {
                 Util.Log("MUSIC: Link Detected");
+
                 if (query.ToLower().Contains("spotify.com"))
-                    return ("I can't play from Spotify, working on it though!", false);
+                {
+                    return await PlaySpotify(query, context);
+                }
+
                 results = await _lavaNode.SearchAsync(query);
             }
             else
@@ -140,12 +150,14 @@ namespace SimpBot.Services
                         return ($"**Now playing:** *{track.Title}*\n{track.Url}", true);
                     }
                 case LoadStatus.PlaylistLoaded:
+                    bool isNowPlaying = false;
                     foreach (var t in results.Tracks)
                     {
                         if (_player.PlayerState != PlayerState.Playing)
                         {
                             await _player.PlayAsync(t);
                             await _player.ResumeAsync();
+                            isNowPlaying = true;
                             continue;
                         }
                         _player.Queue.Enqueue(t);
@@ -154,10 +166,86 @@ namespace SimpBot.Services
                     await context.Channel.SendMessageAsync(
                         $"*{results.Playlist.Name}* loaded with {results.Tracks.Count} songs!");
                     stopMusicTimer(context.Guild);
-                    return ($"**Now playing:** *{_player.Track.Title}*\n{_player.Track.Url}", true);
+                    return (isNowPlaying ? ($"**Now playing:** *{_player.Track.Title}*\n{_player.Track.Url}", true) : ("", false));
                 default:
                     return ("Something happened, but I'm not gonna tell you what! HAHA!", false);
             }
+        }
+
+        public async Task<(string nowPlaying, bool isNowPlaying)> PlaySpotify(string spotifyLink, SocketCommandContext context)
+        {
+            SearchResponse results;
+            if (spotifyLink.ToLower().Contains("track"))
+            {
+                Util.Log("MUSIC: Spotify song detected!");
+                string id = spotifyLink.Split("track/")[1].Split("?")[0];
+                FullTrack t = await _spotify.Tracks.Get(id);
+                Util.Log("MUSIC: " + t.Name + " " + t.Artists[0].Name);
+                results = await _lavaNode.SearchYouTubeAsync(t.Name + " " + t.Artists[0].Name);
+                if (results.LoadStatus == LoadStatus.TrackLoaded || results.LoadStatus == LoadStatus.SearchResult)
+                {
+                    var track = results.Tracks.FirstOrDefault();
+                    if (track is null) return ("Load Failed!", false);
+
+                    stopMusicTimer(context.Guild);
+                    
+                    if (_player.PlayerState == PlayerState.Playing)
+                    {
+                        _player.Queue.Enqueue(track);
+                        return ($"*{track.Title}* has been added to the queue.", false);
+                    }
+                    else
+                    {
+                        await _player.PlayAsync(track);
+                        return ($"**Now playing:** *{track.Title}*\n{track.Url}", true);
+                    }
+                }
+            }
+            else if (spotifyLink.ToLower().Contains("playlist"))
+            {
+                context.Channel.SendMessageAsync("Loading spotify playlist, this might take a while to complete.");
+                Util.Log("MUSIC: Spotify playlist detected!");
+                string id = spotifyLink.Split("playlist/")[1].Split("?")[0];
+                FullPlaylist fp = await _spotify.Playlists.Get(id);
+                
+                if (fp.Tracks == null) return ("Load playlist from spotify failed", false);
+                
+                var tracks = await _spotify.PaginateAll(fp.Tracks);
+                string returnMessage = "";
+                int trackcount = 0;
+                bool isNowPlaying = false;
+                for (int j = 0; j < tracks.Count; j++)
+                {
+                    FullTrack t = (FullTrack) (tracks[j].Track);
+                    results = await _lavaNode.SearchYouTubeAsync(t.Name + " " + t.Artists[0].Name);
+                    if (results.LoadStatus == LoadStatus.TrackLoaded || results.LoadStatus == LoadStatus.SearchResult)
+                    {
+                        stopMusicTimer(context.Guild);
+                        trackcount++;
+                        if (_player.PlayerState != PlayerState.Playing)
+                        {
+                            await _player.PlayAsync(results.Tracks.FirstOrDefault());
+                            await _player.ResumeAsync();
+                            isNowPlaying = true;
+                        }
+                        else
+                        {
+                            _player.Queue.Enqueue(results.Tracks.FirstOrDefault());
+                        }
+                    }
+                    else
+                    {
+                        returnMessage += "\nFailed loading: " + t.Name + " " + t.Artists[0].Name + "";
+                    }
+
+                }
+
+                await context.Channel.SendMessageAsync("Added " + trackcount + " to the queue" + returnMessage);
+
+                return (isNowPlaying ? ($"**Now playing:** *{_player.Track.Title}*\n{_player.Track.Url}", true) : ("", false));
+            }
+
+            return ("Load from spotify failed!", false);
         }
 
         public async Task<string> FastForward(IGuild guild, int secs)
@@ -200,6 +288,7 @@ namespace SimpBot.Services
             _data.SingleLoop = false;
             _data.MusicQueueMessage = null;
             _data.NowPlayingMessage = null;
+            stopMusicTimer(voiceChannel.Guild);
 
             await _lavaNode.LeaveAsync(voiceChannel);
             return "";

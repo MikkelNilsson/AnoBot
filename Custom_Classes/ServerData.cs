@@ -188,7 +188,7 @@ namespace SimpBot.Custom_Classes
         private async void TimerCallback(object o)
         {
             TimerCallbackObject t = (TimerCallbackObject) o;
-            if (isTimerActive)
+            if (isTimerActive && t.n != null)
                 await t.n.LeaveAsync(t.p.VoiceChannel);
         }
     }

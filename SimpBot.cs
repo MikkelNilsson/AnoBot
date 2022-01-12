@@ -7,6 +7,7 @@ using SimpBot.Custom_Classes;
 using Microsoft.Extensions.DependencyInjection;
 using Victoria;
 using SimpBot.Services;
+using SpotifyAPI.Web;
 
 namespace SimpBot
 {
@@ -16,6 +17,7 @@ namespace SimpBot
         private CommandService _cmdService;
         private IServiceProvider _services;
         private DataService _dataService;
+        private SpotifyClient _spotify;
 
         public SimpBot(DiscordSocketClient client = null, CommandService cmdService = null, DataService dataService = null)
         {
@@ -48,11 +50,28 @@ namespace SimpBot
                 token = System.Environment.GetEnvironmentVariable("botToken");
             }
 
+            string spotifycredentials = "";
+            try
+            {
+                spotifycredentials = await System.IO.File.ReadAllTextAsync(
+                    Environment.CurrentDirectory + _dataService.Divider +
+                    "secret" + _dataService.Divider + "spotifyCredentials.txt");
+            }
+            catch
+            {
+                Util.Log("Could not load Spotify credentials from file, trying env variables.");
+                spotifycredentials = System.Environment.GetEnvironmentVariable("spotifyCredentials");
+            }
 
+            spotifycredentials = spotifycredentials.Split("\n")[0];
+            
+            
             await _client.LoginAsync(TokenType.Bot, token);
             token = "";
             await _client.StartAsync();
-
+            _spotify = new SpotifyClient(SpotifyClientConfig.CreateDefault().WithAuthenticator(new ClientCredentialsAuthenticator(spotifycredentials.Split(" ")[0], spotifycredentials.Split(" ")[1])));
+            spotifycredentials = "";
+            Util.Log((_spotify != null ? "Spotify connected. Test: " + _spotify.Tracks.Get("3z06k8YF9CqX0CGFrlekOK").Result.Name : "Spotify Error!"));
             _client.Log += Util.Log;
             _services = SetupServices();
 
@@ -84,6 +103,7 @@ namespace SimpBot
             .AddSingleton<MusicService>()
             .AddSingleton<BotSettingsService>()
             .AddSingleton<WelcomeMessageService>()
+            .AddSingleton(_spotify)
             .BuildServiceProvider();
 
     }
