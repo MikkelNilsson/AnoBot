@@ -246,8 +246,8 @@ namespace SimpBot.Services
             }
             else if (spotifyLink.ToLower().Contains("album"))
             {
-                Util.Log("MUSIC: Spotify playlist detected!");
-                string id = spotifyLink.Split("playlist/")[1].Split("?")[0];
+                Util.Log("MUSIC: Spotify album detected!");
+                string id = spotifyLink.Split("album/")[1].Split("?")[0];
                 FullAlbum fa = await _spotify.Albums.Get(id);
 
                 var tracks = fa.Tracks.Items;
