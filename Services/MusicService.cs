@@ -244,6 +244,46 @@ namespace SimpBot.Services
 
                 return (isNowPlaying ? ($"**Now playing:** *{_player.Track.Title}*\n{_player.Track.Url}", true) : ("", false));
             }
+            else if (spotifyLink.ToLower().Contains("album"))
+            {
+                Util.Log("MUSIC: Spotify playlist detected!");
+                string id = spotifyLink.Split("playlist/")[1].Split("?")[0];
+                FullAlbum fa = await _spotify.Albums.Get(id);
+
+                var tracks = fa.Tracks.Items;
+                string returnMessage = "";
+                int trackcount = 0;
+                bool isNowPlaying = false;
+                for (int i = 0; i < tracks.Count; i++)
+                {
+                    var t = tracks[i];
+                    
+                    results = await _lavaNode.SearchYouTubeAsync(t.Name + " " + t.Artists[0].Name);
+                    if (results.LoadStatus == LoadStatus.TrackLoaded || results.LoadStatus == LoadStatus.SearchResult)
+                    {
+                        trackcount++;
+                        if (_player.PlayerState != PlayerState.Playing)
+                        {
+                            stopMusicTimer(context.Guild);
+                            await _player.PlayAsync(results.Tracks.FirstOrDefault());
+                            await _player.ResumeAsync();
+                            isNowPlaying = true;
+                        }
+                        else
+                        {
+                            _player.Queue.Enqueue(results.Tracks.FirstOrDefault());
+                        }
+                    }
+                    else
+                    {
+                        returnMessage += "\nFailed loading: " + t.Name + " " + t.Artists[0].Name + "";
+                    }
+                }
+                
+                await context.Channel.SendMessageAsync("Added " + trackcount + " to the queue" + returnMessage);
+
+                return (isNowPlaying ? ($"**Now playing:** *{_player.Track.Title}*\n{_player.Track.Url}", true) : ("", false));
+            }
 
             return ("Load from spotify failed!", false);
         }
@@ -461,7 +501,7 @@ namespace SimpBot.Services
             if (chan is null) return;
             SetData(chan.Guild);
 
-            if (arg1.HasValue && HasMusicPrivilege((SocketGuildUser)arg1.Value.Author) && !Util.isMe(arg3.User.Value) && _data.MusicQueueMessage.HasValue && arg1.Value.Id == _data.MusicQueueMessage.Value.msg.Id)
+            if (arg1.HasValue && HasMusicPrivilege((SocketGuildUser)arg1.Value.Author) && !Util.isWuBot(arg3.User.Value) && _data.MusicQueueMessage.HasValue && arg1.Value.Id == _data.MusicQueueMessage.Value.msg.Id)
             {
                 var pageNumber = -1;
                 if (arg3.Emote.Equals(new Emoji("\U000023EE")))
@@ -545,6 +585,11 @@ namespace SimpBot.Services
             SocketGuildUser guser = (SocketGuildUser)user;
             SetData(guser.Guild);
             return (/*Util.isAno(guser) ||*/ !_data.HasMusicRole() || guser.Roles.Contains(guser.Guild.GetRole(_data.MusicRole)));
+        }
+
+        public IEnumerable<LavaPlayer> GetPlayers()
+        {
+            return _lavaNode.Players;
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System;
 using SimpBot.Custom_Classes;
 using Microsoft.Extensions.DependencyInjection;
+using SimpBot.Modules;
 using Victoria;
 using SimpBot.Services;
 using SpotifyAPI.Web;
@@ -104,6 +105,7 @@ namespace SimpBot
             .AddSingleton<BotSettingsService>()
             .AddSingleton<WelcomeMessageService>()
             .AddSingleton(_spotify)
+            .AddSingleton<AdminService>()
             .BuildServiceProvider();
 
     }

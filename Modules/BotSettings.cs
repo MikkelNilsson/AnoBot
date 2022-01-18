@@ -71,5 +71,7 @@ namespace SimpBot.Modules
         {
             await ReplyAsync(_settingsService.RemoveMusicRole(Context.Guild));
         }
+        
+        
     }
 }
