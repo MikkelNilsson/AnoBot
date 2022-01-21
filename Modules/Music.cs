@@ -218,6 +218,13 @@ namespace SimpBot.Modules
             await ReplyAsync(_musicService.Clear(Context.Guild));
         }
 
+        [Command("Move", true)]
+        private async Task MoveItem(string sfrom, string sto)
+        {
+            if (!await Permission()) return;
+            await ReplyAsync(_musicService.Move(Context.Guild, sfrom, sto));
+        }
+
         private async Task<bool> Permission()
         {
             if (!_musicService.HasMusicPrivilege(Context.User))

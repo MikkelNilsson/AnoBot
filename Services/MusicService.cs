@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using Victoria;
 using Victoria.EventArgs;
@@ -530,6 +531,38 @@ namespace SimpBot.Services
 
                 await _data.MusicQueueMessage.Value.msg.RemoveReactionAsync(arg3.Emote, arg3.User.Value);
             }
+        }
+
+        public string Move(IGuild guild, string sfrom, string sto)
+        {
+            SetData(guild);
+            SetPlayer(guild);
+            if (!Int32.TryParse(sfrom, out int from) ||
+                !Int32.TryParse(sto, out int to) ||
+                --from >= _player.Queue.Count ||
+                from < 0 ||
+                --to >= _player.Queue.Count ||
+                to < 0 )
+                {
+                return "Wrong use of move, use move like \"" + _data.Prefix +
+                       "move <position of song to move> <position to move song to>\"";
+            }
+
+            var list = _player.Queue.ToList();
+            var oldItem = list[from];
+            
+            if (from < to) to--;
+            
+            list.Insert(to, oldItem);
+            
+            _player.Queue.Clear();
+            foreach (var t in list)
+            {
+                _player.Queue.Enqueue(t);
+            }
+
+            return oldItem.Title + " moved to position " + (++to);
+
         }
 
 
