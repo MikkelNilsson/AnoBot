@@ -83,11 +83,12 @@ namespace SimpBot
                     "`SetMusicRole <Role>` or use `SMR <Role>`: Sets a role to grant music privileges, only users with this role will be able to play music.\n" +
                     "`RemoveMusicRole` or use `RMR`: Removes music role, everyone can play music with WUbot.");
             }
-
+            
             res.AddField("**__Music:__**",
-                "`Play <query>`: Query being a youtube link or a search phrase.\n" +
+                "`Play <query>`: Query being a youtube link, Spotify link (Songs, Playlists or Albums) or a search phrase.\n" +
                 "`Queue`: Shows the queue.\n" +
                 "`Skip`: Skips the current song.\n" +
+                "`Move` <Position of song to move> <Position to move song to>: Moves a song to a specified position\n" +
                 "`Clear`: Clears the queue.\n" +
                 "`Leave`: The bot leaves the voice channel and clears the queue.\n" +
                 "`Volume <volume level>`: Sets the volume (Level between 0 and 150).\n" +
