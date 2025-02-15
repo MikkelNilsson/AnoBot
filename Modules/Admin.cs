@@ -13,11 +13,18 @@ namespace SimpBot.Modules
         {
             _admin = admin;
         }
-        
+
         [Command("ActiveMusic")]
+        [Alias("Players")]
         private async Task getActiveMusicServers()
         {
             await ReplyAsync(await _admin.getActiveMusicServers(Context));
+        }
+
+        [Command("Servers")]
+        private async Task getAllServers()
+        {
+            await ReplyAsync(await _admin.getAllServers(Context));
         }
     }
 }

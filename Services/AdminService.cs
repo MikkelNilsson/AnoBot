@@ -10,10 +10,12 @@ namespace SimpBot.Services
     public class AdminService
     {
         private MusicService _music;
+        private DiscordSocketClient _client;
 
-        public AdminService(MusicService music)
+        public AdminService(DiscordSocketClient client, MusicService music)
         {
             _music = music;
+            _client = client;
         }
         public async Task<string> getActiveMusicServers(SocketCommandContext context)
         {
@@ -30,6 +32,24 @@ namespace SimpBot.Services
             }
 
             return res;
+        }
+
+        public async Task<string> getAllServers(SocketCommandContext context)
+        {
+            if (!Util.isAdminChannel(context.Channel, context.Guild)) return "";
+            var guilds = _client.Guilds;
+            if (guilds.Count() == 0)
+            {
+                return "No servers active";
+            }
+            string res = "Active Servers:";
+            foreach (var guild in guilds)
+            {
+                res += "\n" + guild.Name;
+            }
+
+            return res;
+
         }
     }
 }

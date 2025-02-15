@@ -33,12 +33,13 @@ namespace SimpBot
 
         private async Task HandleMessage(SocketMessage msg)
         {
+            System.Console.WriteLine();
             try
             {
                 var argPos = 0;
                 if (msg.Author.IsBot) return;
 
-                //Util.Log(msg.Author.ToString().Substring(0, msg.Author.ToString().Length - 5) + ": " + msg.Content);
+                Util.Log(msg.Author.ToString().Substring(0, msg.Author.ToString().Length - 5) + ": " + msg.Content);
 
                 SocketUserMessage userMsg = msg as SocketUserMessage;
                 if (userMsg is null) return;
